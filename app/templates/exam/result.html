@@ -1,0 +1,165 @@
+{% extends "base.html" %}
+
+{% block title %}کارنامه آزمون شماره {{ report.id }} | تست ۹۸{% endblock %}
+
+{% block content %}
+<div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <!-- هدر کارنامه -->
+    <div class="bg-white rounded-3xl border border-slate-200/90 p-6 sm:p-10 shadow-sm mb-8">
+        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between pb-6 border-b border-slate-100 gap-4">
+            <div>
+                <span class="text-xs font-bold text-brand-600 bg-brand-50 px-3 py-1 rounded-full mb-2 inline-block">
+                    {{ report.category_name or 'آزمون جامع' }}
+                </span>
+                <h1 class="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">کارنامه تحلیلی آزمون #{{ report.id }}</h1>
+                <p class="text-xs text-slate-400 font-mono mt-1">تاریخ ثبت: {{ (report.finished_at or report.started_at) | jalali }}</p>
+            </div>
+            <div class="flex items-center gap-3">
+                <a href="/exam/builder?category={{ report.category }}" class="px-4 py-2.5 rounded-xl bg-brand-50 hover:bg-brand-100 text-brand-700 font-bold text-xs transition-colors">
+                    🔄 آزمون مجدد این درس
+                </a>
+                <a href="/exam/builder" class="px-4 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs transition-colors">
+                    + آزمون جدید
+                </a>
+            </div>
+        </div>
+
+        <!-- کارت‌های درصد، تراز و رتبه -->
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mt-8">
+            <div class="bg-slate-50 p-5 rounded-2xl border border-slate-100 text-center">
+                <span class="text-xs font-medium text-slate-500 block mb-1">درصد نهایی (با نمره منفی)</span>
+                <div class="text-3xl font-black font-mono {% if report.raw_score >= 50 %}text-emerald-600{% elif report.raw_score >= 20 %}text-amber-600{% else %}text-rose-600{% endif %}">
+                    {{ report.raw_score }}%
+                </div>
+            </div>
+
+            <div class="bg-slate-50 p-5 rounded-2xl border border-slate-100 text-center">
+                <span class="text-xs font-medium text-slate-500 block mb-1">تراز استاندارد کشوری (T-Score)</span>
+                <div class="text-3xl font-black font-mono text-indigo-600">
+                    {{ report.t_score or 500 }}
+                </div>
+            </div>
+
+            <div class="bg-slate-50 p-5 rounded-2xl border border-slate-100 text-center">
+                <span class="text-xs font-medium text-slate-500 block mb-1">تخمین رتبه شما</span>
+                <div class="text-3xl font-black font-mono text-brand-600">
+                    {{ report.rank or 1 }}
+                </div>
+            </div>
+
+            <div class="bg-slate-50 p-5 rounded-2xl border border-slate-100 text-center">
+                <span class="text-xs font-medium text-slate-500 block mb-1">تعداد کل سوالات</span>
+                <div class="text-3xl font-black font-mono text-slate-800">
+                    {{ report.total_questions }}
+                </div>
+            </div>
+        </div>
+
+        <!-- نوار وضعیت پاسخ‌ها (درست، غلط، نزده) -->
+        <div class="grid grid-cols-3 gap-3 mt-6">
+            <div class="flex items-center justify-between p-3.5 bg-emerald-50 rounded-xl border border-emerald-100 text-emerald-900">
+                <span class="text-xs font-bold">پاسخ‌های صحیح</span>
+                <span class="text-base font-black font-mono">{{ report.correct_count }}</span>
+            </div>
+            <div class="flex items-center justify-between p-3.5 bg-rose-50 rounded-xl border border-rose-100 text-rose-900">
+                <span class="text-xs font-bold">پاسخ‌های نادرست</span>
+                <span class="text-base font-black font-mono">{{ report.wrong_count }}</span>
+            </div>
+            <div class="flex items-center justify-between p-3.5 bg-slate-100 rounded-xl border border-slate-200 text-slate-700">
+                <span class="text-xs font-bold">بدون پاسخ</span>
+                <span class="text-base font-black font-mono">{{ report.unanswered_count }}</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- بنر ذخیره کارنامه در بله برای کاربران مهمان (Conversion Funnel) -->
+    {% if not user and bale_session %}
+    <div class="bg-gradient-to-r from-emerald-800 to-teal-900 text-white rounded-3xl p-6 sm:p-8 mb-8 shadow-xl relative overflow-hidden">
+        <div class="max-w-2xl relative z-10">
+            <span class="px-2.5 py-1 rounded-md bg-emerald-500/20 text-emerald-200 text-xs font-bold border border-emerald-400/30">حفظ سابقه مطالعاتی</span>
+            <h3 class="text-xl sm:text-2xl font-black mt-2 mb-2">کارنامه آزمون خود را برای همیشه ذخیره کنید</h3>
+            <p class="text-emerald-100 text-xs sm:text-sm leading-relaxed mb-5">
+                با ورود تک‌کلیکی در پیام‌رسان بله، این کارنامه و خطاهای شما به صورت خودکار به جعبه لایتنر هوشمند منتقل می‌شود تا در روزهای آینده فقط سوالات اشتباه خود را مرور کنید.
+            </p>
+            <a href="{{ bale_session.bale_url }}" target="_blank" class="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-white text-emerald-900 font-bold text-sm shadow-lg hover:bg-emerald-50 transition-transform hover:scale-105">
+                <span>اتصال کارنامه به ربات بله (بدون پسورد)</span>
+                <svg class="w-4 h-4 rtl:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
+            </a>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- پاسخنامه تشریحی و مرور تک‌تک سوالات -->
+    <div class="space-y-6">
+        <div class="flex items-center justify-between">
+            <h2 class="text-xl font-black text-slate-900">پاسخنامه تشریحی و بررسی سوالات</h2>
+            <span class="text-xs text-slate-400 font-medium">تحلیل عمیق اشتباهات</span>
+        </div>
+
+        {% for q in report.questions %}
+        <div class="bg-white rounded-2xl border {% if q.is_correct == 1 %}border-emerald-200{% elif q.selected_option is not none %}border-rose-200{% else %}border-slate-200{% endif %} p-6 sm:p-7 shadow-sm">
+            <div class="flex items-center justify-between mb-4">
+                <div class="flex items-center gap-2">
+                    <span class="px-2.5 py-1 rounded-lg bg-slate-100 font-mono text-xs font-black">سوال {{ q.order }}</span>
+                    {% if q.is_correct == 1 %}
+                        <span class="text-xs font-bold text-emerald-700 bg-emerald-50 px-2.5 py-0.5 rounded-full flex items-center gap-1">✓ پاسخ درست</span>
+                    {% elif q.selected_option is not none %}
+                        <span class="text-xs font-bold text-rose-700 bg-rose-50 px-2.5 py-0.5 rounded-full flex items-center gap-1">✕ پاسخ نادرست</span>
+                    {% else %}
+                        <span class="text-xs font-bold text-slate-600 bg-slate-100 px-2.5 py-0.5 rounded-full">بدون پاسخ</span>
+                    {% endif %}
+                </div>
+                <span class="text-xs text-slate-400">سطح: {% if q.difficulty_level == 'easy' %}ساده{% elif q.difficulty_level == 'hard' %}دشوار{% else %}متوسط{% endif %}</span>
+            </div>
+
+            <!-- صورت سوال -->
+            <p class="font-extrabold text-base text-slate-900 leading-relaxed mb-5">
+                {{ q.question_text }}
+            </p>
+
+            <!-- گزینه‌ها با نمایش رنگی انتخاب کاربر و پاسخ صحیح -->
+            <div class="space-y-2 mb-5">
+                {% for opt in q.options %}
+                {% set opt_index = loop.index0 %}
+                {% set is_correct_ans = (q.correct_index == opt_index) %}
+                {% set is_user_choice = (q.selected_option == opt_index) %}
+
+                <div class="p-3.5 rounded-xl border text-sm font-medium flex items-center justify-between
+                    {% if is_correct_ans %}
+                        border-emerald-400 bg-emerald-50 text-emerald-900 font-bold
+                    {% elif is_user_choice and not is_correct_ans %}
+                        border-rose-300 bg-rose-50 text-rose-900 line-through
+                    {% else %}
+                        border-slate-100 bg-slate-50/50 text-slate-700
+                    {% endif %}">
+                    <div class="flex items-center gap-3">
+                        <span class="w-6 h-6 rounded-md font-mono text-xs font-bold flex items-center justify-center 
+                            {% if is_correct_ans %}bg-emerald-200 text-emerald-900{% elif is_user_choice %}bg-rose-200 text-rose-900{% else %}bg-slate-200 text-slate-600{% endif %}">
+                            {{ ['۱', '۲', '۳', '۴'][opt_index] }}
+                        </span>
+                        <span>{{ opt }}</span>
+                    </div>
+
+                    {% if is_correct_ans and is_user_choice %}
+                        <span class="text-xs text-emerald-700 font-bold">پاسخ شما (صحیح)</span>
+                    {% elif is_correct_ans %}
+                        <span class="text-xs text-emerald-700 font-bold">گزینه صحیح</span>
+                    {% elif is_user_choice %}
+                        <span class="text-xs text-rose-600 font-bold">انتخاب شما (غلط)</span>
+                    {% endif %}
+                </div>
+                {% endfor %}
+            </div>
+
+            <!-- پاسخ تشریحی و نکات آموزشی -->
+            {% if q.explanation %}
+            <div class="bg-indigo-50/60 border border-indigo-100 rounded-xl p-4 text-xs text-indigo-950 leading-relaxed">
+                <span class="font-bold text-indigo-900 block mb-1">💡 پاسخ تشریحی و نکته کلیدی:</span>
+                {{ q.explanation }}
+            </div>
+            {% endif %}
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

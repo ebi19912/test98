@@ -1,0 +1,205 @@
+{% extends "base.html" %}
+
+{% block title %}در حال برگزاری آزمون شماره {{ attempt.id }} | تست ۹۸{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6" 
+     x-data="examRunner({
+         expiresAt: '{{ attempt.expires_at }}',
+         totalQuestions: {{ attempt.total_questions }},
+         attemptId: {{ attempt.id }}
+     })">
+
+    <!-- نوار وضعیت بالای صفحه (تایمر و دکمه اتمام آزمون) -->
+    <div class="bg-white rounded-2xl border border-slate-200 p-4 mb-6 shadow-sm sticky top-20 z-30 flex flex-wrap items-center justify-between gap-4">
+        <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-xl bg-brand-50 text-brand-600 flex items-center justify-center font-bold text-sm">
+                #{{ attempt.id }}
+            </div>
+            <div>
+                <h2 class="font-bold text-slate-900 text-sm">آزمون آنلاین استخدامی</h2>
+                <div class="flex items-center gap-2 text-xs text-slate-500">
+                    <span x-text="'پاسخ‌داده: ' + answeredCount + ' از ' + totalQuestions"></span>
+                    <span>•</span>
+                    <span>{% if attempt.has_negative_marking %}نمره منفی فعال{% else %}بدون نمره منفی{% endif %}</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- تایمر معکوس -->
+        <div class="flex items-center gap-2 bg-slate-900 text-white px-4 py-2 rounded-xl font-mono text-base font-bold shadow-sm" :class="{ 'bg-rose-600 animate-pulse': isUrgent }">
+            <svg class="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+            <span x-text="timeFormatted">00:00</span>
+        </div>
+
+        <!-- دکمه پایان و ثبت نهایی آزمون -->
+        <form id="finish-form" action="/exam/finish/{{ attempt.id }}" method="post" @submit="confirmFinish($event)">
+            <button type="submit" class="px-5 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs sm:text-sm shadow-md shadow-rose-600/20 transition-all flex items-center gap-1.5">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                <span>پایان و ثبت آزمون</span>
+            </button>
+        </form>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
+        <!-- ستون پالت دسترسی سریع به سوالات (Question Navigator) -->
+        <div class="order-2 lg:order-1 lg:col-span-1">
+            <div class="bg-white rounded-2xl border border-slate-200 p-5 sticky top-40 shadow-sm">
+                <h3 class="font-bold text-slate-900 text-sm mb-3">پالت شماره سوالات</h3>
+                <div class="grid grid-cols-5 gap-2 max-h-80 overflow-y-auto p-1">
+                    {% for q in questions %}
+                    <button type="button" 
+                            @click="scrollToQuestion({{ q.order }})"
+                            id="nav-btn-{{ q.question_id }}"
+                            class="h-9 rounded-lg font-mono text-xs font-bold transition-all border flex items-center justify-center {% if q.selected_option is not none %}bg-brand-600 text-white border-brand-600{% else %}bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100{% endif %}">
+                        {{ q.order }}
+                    </button>
+                    {% endfor %}
+                </div>
+                <div class="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-500">
+                    <span class="flex items-center gap-1"><span class="w-3 h-3 rounded bg-brand-600 inline-block"></span> پاسخ‌داده</span>
+                    <span class="flex items-center gap-1"><span class="w-3 h-3 rounded bg-slate-200 inline-block"></span> بی‌پاسخ</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- ستون کارت‌های سوالات -->
+        <div class="order-1 lg:order-2 lg:col-span-3 space-y-6">
+            {% for q in questions %}
+            <div id="q-card-{{ q.order }}" class="bg-white rounded-2xl border border-slate-200/90 p-6 sm:p-7 shadow-sm transition-all hover:border-slate-300">
+                <!-- هدر سوال -->
+                <div class="flex items-center justify-between mb-4 pb-3 border-b border-slate-100">
+                    <div class="flex items-center gap-2">
+                        <span class="px-2.5 py-1 rounded-lg bg-slate-100 text-slate-800 font-black text-xs font-mono">سوال {{ q.order }}</span>
+                        <span class="text-xs text-slate-400 font-medium">{% if q.category == 'icdl' %}مهارت‌های ICDL{% elif q.category == 'laws' %}قوانین اداری{% elif q.category == 'maaref' %}معارف اسلامی{% else %}فناوری اطلاعات{% endif %}</span>
+                    </div>
+
+                    <div class="flex items-center gap-2">
+                        <!-- وضعیت ذخیره HTMX -->
+                        <div id="status-{{ q.question_id }}" class="text-xs"></div>
+
+                        <!-- دکمه نشان کردن سوال -->
+                        <button hx-post="/exam/bookmark/{{ q.question_id }}" hx-swap="outerHTML" class="text-xs text-slate-500 hover:text-amber-600 p-1.5 rounded-lg border border-slate-200 hover:bg-amber-50 transition-colors" title="نشان کردن سوال">
+                            ☆ نشان کردن
+                        </button>
+                    </div>
+                </div>
+
+                <!-- صورت سوال -->
+                <p class="font-extrabold text-base sm:text-lg text-slate-900 leading-relaxed mb-6">
+                    {{ q.question_text }}
+                </p>
+
+                <!-- ۴ گزینه تستی -->
+                <div class="space-y-3">
+                    {% for opt in q.options %}
+                    {% set opt_index = loop.index0 %}
+                    <label class="flex items-center p-3.5 rounded-xl border border-slate-200 cursor-pointer hover:bg-slate-50 hover:border-brand-400 transition-all has-[:checked]:border-brand-600 has-[:checked]:bg-brand-50/70 group">
+                        <input type="radio" 
+                               name="q_{{ q.question_id }}" 
+                               value="{{ opt_index }}"
+                               {% if q.selected_option == opt_index %}checked{% endif %}
+                               hx-post="/exam/answer"
+                               hx-vals='{"attempt_id": {{ attempt.id }}, "question_id": {{ q.question_id }}, "selected_option": {{ opt_index }}}'
+                               hx-target="#status-{{ q.question_id }}"
+                               @change="markAnswered({{ q.question_id }})"
+                               class="w-4 h-4 text-brand-600 focus:ring-brand-500">
+                        <span class="w-6 h-6 rounded-lg bg-slate-100 text-slate-600 text-xs font-bold font-mono flex items-center justify-center mr-3 group-hover:bg-brand-100 group-hover:text-brand-700 transition-colors">
+                            {{ ['۱', '۲', '۳', '۴'][opt_index] }}
+                        </span>
+                        <span class="text-sm font-medium text-slate-800 leading-relaxed mr-2">
+                            {{ opt }}
+                        </span>
+                    </label>
+                    {% endfor %}
+                </div>
+
+                <!-- پاک کردن پاسخ و گزارش خطا -->
+                <div class="mt-4 pt-3 flex items-center justify-between text-xs text-slate-400">
+                    <button type="button" 
+                            @click="clearAnswer({{ attempt.id }}, {{ q.question_id }})"
+                            class="hover:text-rose-600 transition-colors">
+                        پاک کردن گزینه انتخابی
+                    </button>
+                    <button type="button" @click="reportModalOpen = {{ q.question_id }}" class="hover:text-slate-600 transition-colors">
+                        گزارش اشکال در سوال
+                    </button>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('alpine:init', () => {
+    Alpine.data('examRunner', (config) => ({
+        totalQuestions: config.totalQuestions,
+        answeredCount: {{ questions | selectattr("selected_option", "ne", none) | list | length }},
+        timeLeft: 0,
+        timerInterval: null,
+        isUrgent: false,
+
+        init() {
+            const expires = new Date(config.expiresAt).getTime();
+            const now = new Date().getTime();
+            this.timeLeft = Math.max(0, Math.floor((expires - now) / 1000));
+
+            this.timerInterval = setInterval(() => {
+                if (this.timeLeft > 0) {
+                    this.timeLeft--;
+                    this.isUrgent = this.timeLeft < 180; // کمتر از ۳ دقیقه قرمز شود
+                } else {
+                    clearInterval(this.timerInterval);
+                    alert('زمان آزمون به پایان رسید! کارنامه شما محاسبه و صادر می‌شود.');
+                    document.getElementById('finish-form').submit();
+                }
+            }, 1000);
+        },
+
+        get timeFormatted() {
+            const mins = Math.floor(this.timeLeft / 60);
+            const secs = this.timeLeft % 60;
+            return `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+        },
+
+        markAnswered(qId) {
+            const btn = document.getElementById(`nav-btn-${qId}`);
+            if (btn && !btn.classList.contains('bg-brand-600')) {
+                btn.className = 'h-9 rounded-lg font-mono text-xs font-bold transition-all border flex items-center justify-center bg-brand-600 text-white border-brand-600';
+                this.answeredCount++;
+            }
+        },
+
+        clearAnswer(attemptId, qId) {
+            const radios = document.querySelectorAll(`input[name="q_${qId}"]`);
+            radios.forEach(r => r.checked = false);
+            htmx.ajax('POST', '/exam/answer', {
+                values: { attempt_id: attemptId, question_id: qId, selected_option: '' },
+                target: `#status-${qId}`
+            });
+            const btn = document.getElementById(`nav-btn-${qId}`);
+            if (btn && btn.classList.contains('bg-brand-600')) {
+                btn.className = 'h-9 rounded-lg font-mono text-xs font-bold transition-all border flex items-center justify-center bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100';
+                this.answeredCount = Math.max(0, this.answeredCount - 1);
+            }
+        },
+
+        scrollToQuestion(order) {
+            const el = document.getElementById(`q-card-${order}`);
+            if (el) {
+                el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+        },
+
+        confirmFinish(e) {
+            if (!confirm('آیا از اتمام آزمون و مشاهده کارنامه تحلیلی اطمینان دارید؟')) {
+                e.preventDefault();
+            }
+        }
+    }));
+});
+</script>
+{% endblock %}

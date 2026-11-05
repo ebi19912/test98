@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+
+{% block title %}گزارش‌های خطای کاربران | پنل مدیریت تست ۹۸{% endblock %}
+
+{% block content %}
+<div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between pb-6 mb-8 border-b border-slate-200 gap-4">
+        <div>
+            <h1 class="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight mb-1">گزارش‌های خطای ثبت‌شده توسط داوطلبان</h1>
+            <p class="text-xs text-slate-500">کنترل کیفیت مشارکتی (Crowdsourced Quality Control) برای اصلاح کلید یا متن سوالات</p>
+        </div>
+        <a href="/admin" class="text-xs text-brand-600 font-bold hover:underline">بازگشت به داشبورد</a>
+    </div>
+
+    {% if reports %}
+    <div class="space-y-6">
+        {% for rep in reports %}
+        <div id="rep-row-{{ rep.id }}" class="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
+            <div class="flex items-center justify-between mb-3 pb-3 border-b border-slate-100">
+                <div class="flex items-center gap-2">
+                    <span class="px-2.5 py-0.5 rounded-md font-mono text-xs font-black bg-rose-50 text-rose-700">
+                        سوال #{{ rep.question_id }}
+                    </span>
+                    <span class="text-xs text-slate-500">گزارش‌دهنده: {{ rep.reporter_name or 'کاربر مهمان' }}</span>
+                </div>
+                <div class="flex items-center gap-2">
+                    <span class="text-xs text-slate-400 font-mono">{{ rep.created_at[:16] }}</span>
+                    <span class="px-2 py-0.5 rounded-full text-[10px] font-bold {% if rep.status == 'pending' %}bg-amber-100 text-amber-800{% else %}bg-slate-100 text-slate-600{% endif %}">
+                        {{ rep.status }}
+                    </span>
+                </div>
+            </div>
+
+            <!-- دلیل گزارش -->
+            <div class="mb-4">
+                <span class="text-xs font-bold text-rose-700 block mb-1">علت گزارش خطا:</span>
+                <p class="text-xs text-slate-800 bg-rose-50/50 p-2.5 rounded-xl border border-rose-100 font-medium">
+                    {{ rep.reason }} {% if rep.details %} - {{ rep.details }}{% endif %}
+                </p>
+            </div>
+
+            <!-- متن سوال مربوطه -->
+            <div class="p-3 bg-slate-50 rounded-xl mb-4 text-xs text-slate-700">
+                <span class="font-bold text-slate-900 block mb-1">صورت سوال:</span>
+                {{ rep.question_text }}
+            </div>
+
+            <!-- دکمه‌های اقدام -->
+            <div class="flex items-center justify-between pt-3 border-t border-slate-100 text-xs">
+                <a href="/admin/moderation" class="font-bold text-brand-600 hover:underline">
+                    اصلاح در صف بازبینی ←
+                </a>
+                <div class="flex items-center gap-2">
+                    <form hx-post="/admin/reports/resolve" hx-target="#rep-row-{{ rep.id }}" hx-swap="outerHTML" class="inline">
+                        <input type="hidden" name="report_id" value="{{ rep.id }}">
+                        <input type="hidden" name="action" value="dismiss">
+                        <button type="submit" class="px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold">
+                            رد گزارش
+                        </button>
+                    </form>
+                    <form hx-post="/admin/reports/resolve" hx-target="#rep-row-{{ rep.id }}" hx-swap="outerHTML" class="inline">
+                        <input type="hidden" name="report_id" value="{{ rep.id }}">
+                        <input type="hidden" name="action" value="resolve">
+                        <button type="submit" class="px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-bold">
+                            حل شد و بستن
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="text-center py-16 bg-white rounded-3xl border border-slate-200">
+        <div class="w-12 h-12 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center mx-auto mb-3 font-bold text-lg">
+            ✓
+        </div>
+        <h3 class="font-bold text-slate-900 text-sm mb-1">هیچ گزارش خطایی وجود ندارد!</h3>
+        <p class="text-xs text-slate-400">تمام سوالات سامانه بدون گزارش خطا یا برطرف‌شده هستند.</p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

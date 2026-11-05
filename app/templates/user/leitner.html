@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+
+{% block title %}جعبه لایتنر هوشمند | تست ۹۸{% endblock %}
+
+{% block content %}
+<div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between pb-6 mb-8 border-b border-slate-200 gap-4">
+        <div>
+            <h1 class="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight mb-1">جعبه لایتنر و چرخه مرور خطاهای آزمون</h1>
+            <p class="text-xs text-slate-500">تثبیت سوالات دشوار در حافظه بلندمدت با قاعده تکرار فاصله‌دار (Spaced Repetition)</p>
+        </div>
+        <div class="flex items-center gap-2">
+            <a href="/exam/builder?filter_mode=mistakes_only" class="px-4 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs shadow-md transition-all">
+                🎯 آزمون اختصاصی از خطاهای من
+            </a>
+        </div>
+    </div>
+
+    <!-- خلاصه ۵ خانه لایتنر -->
+    <div class="grid grid-cols-2 sm:grid-cols-5 gap-3 mb-10">
+        {% for box in range(1, 6) %}
+        <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm text-center">
+            <span class="text-xs font-bold text-slate-500 block mb-1">
+                خانه {{ box }}
+                <span class="text-[10px] block opacity-70">
+                    {% if box == 1 %}مرور ۱ روزه{% elif box == 2 %}مرور ۳ روزه{% elif box == 3 %}مرور ۷ روزه{% elif box == 4 %}مرور ۱۴ روزه{% else %}تثبیت ۳۰ روزه{% endif %}
+                </span>
+            </span>
+            <div class="text-2xl font-black font-mono text-indigo-600 mt-2">{{ leitner.boxes[box] }}</div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- لیست سوالات موجود در چرخه لایتنر -->
+    <div class="space-y-4">
+        <h3 class="font-bold text-slate-900 text-base mb-4">سوالات فعال در چرخه یادگیری شما</h3>
+
+        {% if questions %}
+            {% for q in questions %}
+            <div class="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm">
+                <div class="flex items-center justify-between mb-3">
+                    <div class="flex items-center gap-2">
+                        <span class="px-2.5 py-0.5 rounded-md bg-indigo-50 text-indigo-700 font-bold text-xs font-mono">
+                            خانه {{ q.box_level }}
+                        </span>
+                        <span class="text-xs text-slate-400 font-medium">{{ q.category_name }}</span>
+                    </div>
+                    <span class="text-[11px] text-slate-400 font-mono">
+                        {{ q.consecutive_correct }} پاسخ درست متوالی
+                    </span>
+                </div>
+
+                <p class="font-bold text-sm text-slate-800 leading-relaxed mb-3">
+                    {{ q.question_text }}
+                </p>
+
+                {% if q.explanation %}
+                <div class="bg-slate-50 border border-slate-100 rounded-xl p-3 text-xs text-slate-600 leading-relaxed">
+                    <span class="font-bold text-slate-700">نکته تشریحی:</span> {{ q.explanation }}
+                </div>
+                {% endif %}
+            </div>
+            {% endfor %}
+        {% else %}
+            <div class="text-center py-16 bg-white rounded-3xl border border-slate-200">
+                <div class="w-12 h-12 rounded-full bg-slate-100 text-slate-400 flex items-center justify-center mx-auto mb-3">
+                    ✓
+                </div>
+                <h4 class="font-bold text-slate-800 text-sm mb-1">جعبه لایتنر شما در حال حاضر خالی است</h4>
+                <p class="text-xs text-slate-400 max-w-sm mx-auto mb-4">
+                    با شرکت در آزمون‌های سایت، هر سوالی را که اشتباه پاسخ دهید به صورت خودکار به این بخش اضافه خواهد شد.
+                </p>
+                <a href="/exam/builder" class="px-4 py-2 rounded-xl bg-brand-600 text-white font-bold text-xs">
+                    شروع یک آزمون جدید
+                </a>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

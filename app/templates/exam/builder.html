@@ -1,0 +1,113 @@
+{% extends "base.html" %}
+
+{% block title %}ساخت آزمون سفارشی آنلاین | تست ۹۸{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <div class="text-center max-w-xl mx-auto mb-10">
+        <h1 class="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight mb-2">موتور آزمون‌ساز هوشمند تست ۹۸</h1>
+        <p class="text-sm text-slate-500">مباحث، تعداد سوالات، زمان‌سنج و شیوه نمره‌دهی را بر اساس هدف مطالعاتی خود تنظیم کنید</p>
+    </div>
+
+    <form action="/exam/create" method="post" class="bg-white rounded-3xl border border-slate-200/90 shadow-sm p-6 sm:p-10 space-y-8">
+        <!-- ۱. انتخاب دسته‌بندی و درس -->
+        <div>
+            <label class="block font-bold text-slate-900 text-sm mb-3">۱. انتخاب مبحث آزمون</label>
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                <label class="relative flex items-center p-3.5 rounded-xl border border-slate-200 cursor-pointer hover:border-brand-500 transition-colors has-[:checked]:border-brand-600 has-[:checked]:bg-brand-50/50">
+                    <input type="radio" name="category" value="all" {% if selected_category == 'all' %}checked{% endif %} class="text-brand-600 focus:ring-brand-500">
+                    <div class="mr-3">
+                        <span class="block font-bold text-sm text-slate-900">آزمون جامع عمومی</span>
+                        <span class="block text-xs text-slate-500 mt-0.5">ترکیب تمام دروس استخدامی</span>
+                    </div>
+                </label>
+                {% for cat in categories %}
+                <label class="relative flex items-center p-3.5 rounded-xl border border-slate-200 cursor-pointer hover:border-brand-500 transition-colors has-[:checked]:border-brand-600 has-[:checked]:bg-brand-50/50">
+                    <input type="radio" name="category" value="{{ cat.code }}" {% if selected_category == cat.code %}checked{% endif %} class="text-brand-600 focus:ring-brand-500">
+                    <div class="mr-3">
+                        <span class="block font-bold text-sm text-slate-900">{{ cat.name_fa }}</span>
+                        <span class="block text-xs text-slate-400 font-mono mt-0.5">{{ cat.question_count }} سوال</span>
+                    </div>
+                </label>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- ۲. تعداد سوالات -->
+        <div>
+            <label class="block font-bold text-slate-900 text-sm mb-3">۲. تعداد سوالات آزمون</label>
+            <div class="grid grid-cols-4 sm:grid-cols-5 gap-3">
+                {% for count in [5, 10, 15, 20, 30] %}
+                <label class="relative flex flex-col items-center justify-center p-3 rounded-xl border border-slate-200 cursor-pointer hover:border-brand-500 transition-colors has-[:checked]:border-brand-600 has-[:checked]:bg-brand-600 has-[:checked]:text-white text-center">
+                    <input type="radio" name="total_questions" value="{{ count }}" {% if count == 15 %}checked{% endif %} class="sr-only">
+                    <span class="font-black text-lg font-mono">{{ count }}</span>
+                    <span class="text-[11px] opacity-80">تست</span>
+                </label>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- ۳. زمان آزمون و نمره منفی -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 pt-4 border-t border-slate-100">
+            <div>
+                <label class="block font-bold text-slate-900 text-sm mb-2">زمان پاسخگویی (دقیقه)</label>
+                <select name="duration_minutes" class="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-slate-800 text-sm font-medium focus:ring-2 focus:ring-brand-500 focus:outline-none">
+                    <option value="10">۱۰ دقیقه (آزمون سرعتی)</option>
+                    <option value="20" selected>۲۰ دقیقه (استاندارد)</option>
+                    <option value="30">۳۰ دقیقه (جامع)</option>
+                    <option value="60">۶۰ دقیقه (شبیه‌ساز دفترچه)</option>
+                </select>
+            </div>
+            <div>
+                <label class="block font-bold text-slate-900 text-sm mb-2">قانون نمره منفی</label>
+                <div class="flex items-center gap-3 mt-3">
+                    <label class="inline-flex items-center cursor-pointer">
+                        <input type="checkbox" name="has_negative_marking" value="true" checked class="w-4 h-4 text-brand-600 rounded border-slate-300 focus:ring-brand-500">
+                        <span class="mr-2 text-sm text-slate-700 font-medium">اعمال نمره منفی یک‌سوم (استاندارد سنجش)</span>
+                    </label>
+                </div>
+            </div>
+        </div>
+
+        <!-- ۴. شیوه چینش سوالات (الگوریتم انتخاب هوشمند) -->
+        <div class="pt-4 border-t border-slate-100">
+            <label class="block font-bold text-slate-900 text-sm mb-3">۴. استراتژی هوشمند انتخاب سوالات</label>
+            <div class="space-y-2">
+                <label class="flex items-start p-3 rounded-xl border border-slate-200 cursor-pointer hover:border-brand-500 transition-colors has-[:checked]:border-brand-600 has-[:checked]:bg-brand-50/50">
+                    <input type="radio" name="filter_mode" value="smart" checked class="mt-1 text-brand-600 focus:ring-brand-500">
+                    <div class="mr-3">
+                        <span class="block font-bold text-sm text-slate-900">هوشمند ترکیبی (پیشنهادی)</span>
+                        <span class="block text-xs text-slate-500">ترکیب ۶۰٪ سوالات جدید، ۳۰٪ خطاهای گذشته شما و ۱۰٪ مرور فاصله‌دار لایتنر</span>
+                    </div>
+                </label>
+
+                <label class="flex items-start p-3 rounded-xl border border-slate-200 cursor-pointer hover:border-brand-500 transition-colors has-[:checked]:border-brand-600 has-[:checked]:bg-brand-50/50">
+                    <input type="radio" name="filter_mode" value="new_only" class="mt-1 text-brand-600 focus:ring-brand-500">
+                    <div class="mr-3">
+                        <span class="block font-bold text-sm text-slate-900">فقط سوالات ندیده (جدید)</span>
+                        <span class="block text-xs text-slate-500">فقط تست‌هایی که تاکنون در آزمون‌های قبلی برای شما نیامده است</span>
+                    </div>
+                </label>
+
+                <label class="flex items-start p-3 rounded-xl border border-slate-200 cursor-pointer hover:border-brand-500 transition-colors has-[:checked]:border-brand-600 has-[:checked]:bg-brand-50/50">
+                    <input type="radio" name="filter_mode" value="mistakes_only" {% if user_error_count == 0 %}disabled{% endif %} class="mt-1 text-brand-600 focus:ring-brand-500">
+                    <div class="mr-3">
+                        <span class="block font-bold text-sm text-slate-900">آزمون رفع اشکال از خطاهای قبلی</span>
+                        <span class="block text-xs text-slate-500">
+                            فقط تست‌هایی که در آزمون‌های قبلی غلط زده‌اید ({{ user_error_count }} سوال در بانک خطاهای شما)
+                        </span>
+                    </div>
+                </label>
+            </div>
+        </div>
+
+        <!-- دکمه سابمیت ساخت آزمون -->
+        <div class="pt-6">
+            <button type="submit" class="w-full py-4 rounded-2xl bg-brand-600 hover:bg-brand-700 text-white font-black text-base shadow-lg shadow-brand-600/25 transition-all hover:scale-[1.01] flex items-center justify-center gap-2">
+                <span>تولید و ورود به جلسه آزمون</span>
+                <svg class="w-5 h-5 rtl:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
+            </button>
+        </div>
+    </form>
+</div>
+{% endblock %}

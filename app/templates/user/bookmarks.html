@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+
+{% block title %}سوالات نشان‌شده | تست ۹۸{% endblock %}
+
+{% block content %}
+<div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between pb-6 mb-8 border-b border-slate-200 gap-4">
+        <div>
+            <h1 class="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight mb-1">سوالات نشان‌شده (Bookmarks)</h1>
+            <p class="text-xs text-slate-500">مجموعه سوالات مهم، چالشی یا کنکوری که برای مرور علامت زده‌اید</p>
+        </div>
+        <div class="flex items-center gap-2">
+            <a href="/exam/builder?filter_mode=bookmarked_only" class="px-4 py-2.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs shadow-md transition-all">
+                ★ آزمون اختصاصی از نشان‌شده‌ها
+            </a>
+        </div>
+    </div>
+
+    {% if bookmarks %}
+    <div class="space-y-5">
+        {% for b in bookmarks %}
+        <div class="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
+            <div class="flex items-center justify-between mb-3">
+                <span class="text-xs font-bold text-brand-600 bg-brand-50 px-2.5 py-0.5 rounded-md">
+                    {{ b.category_name }}
+                </span>
+                <button hx-post="/exam/bookmark/{{ b.question_id }}" hx-swap="outerHTML" class="text-xs text-amber-600 font-bold hover:underline">
+                    حذف از نشان‌شده‌ها
+                </button>
+            </div>
+
+            <p class="font-extrabold text-base text-slate-900 leading-relaxed mb-4">
+                {{ b.question_text }}
+            </p>
+
+            <div class="space-y-2 mb-4">
+                {% for opt in b.options %}
+                {% set is_correct = (b.correct_index == loop.index0) %}
+                <div class="p-3 rounded-xl border text-xs font-medium flex items-center justify-between {% if is_correct %}border-emerald-300 bg-emerald-50 text-emerald-900 font-bold{% else %}border-slate-100 bg-slate-50 text-slate-700{% endif %}">
+                    <div class="flex items-center gap-2">
+                        <span class="w-5 h-5 rounded bg-white border font-mono text-[11px] flex items-center justify-center font-bold">
+                            {{ loop.index }}
+                        </span>
+                        <span>{{ opt }}</span>
+                    </div>
+                    {% if is_correct %}
+                        <span class="text-[11px] text-emerald-700 font-bold">✓ پاسخ صحیح</span>
+                    {% endif %}
+                </div>
+                {% endfor %}
+            </div>
+
+            {% if b.explanation %}
+            <div class="bg-indigo-50/70 border border-indigo-100 rounded-xl p-3 text-xs text-indigo-950 leading-relaxed">
+                <span class="font-bold text-indigo-900">نکته تشریحی:</span> {{ b.explanation }}
+            </div>
+            {% endif %}
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="text-center py-16 bg-white rounded-3xl border border-slate-200">
+        <div class="w-12 h-12 rounded-full bg-slate-100 text-slate-400 flex items-center justify-center mx-auto mb-3 text-lg font-bold">
+            ★
+        </div>
+        <h4 class="font-bold text-slate-800 text-sm mb-1">هنوز هیچ سوالی را نشان نکرده‌اید</h4>
+        <p class="text-xs text-slate-400 max-w-sm mx-auto mb-4">
+            در حین برگزاری آزمون‌ها با زدن دکمه «نشان کردن»، سوالات مهم را به این لیست اضافه کنید.
+        </p>
+        <a href="/exam/builder" class="px-4 py-2 rounded-xl bg-brand-600 text-white font-bold text-xs">
+            ورود به آزمون‌ساز
+        </a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

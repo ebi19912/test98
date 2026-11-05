@@ -1,0 +1,158 @@
+{% extends "base.html" %}
+
+{% block title %}تست ۹۸ | سامانه آزمون‌ساز و خبرخوان هوشمند استخدامی{% endblock %}
+
+{% block content %}
+<!-- بخش هیرو (Hero Section) -->
+<section class="relative overflow-hidden bg-gradient-to-b from-brand-50/60 via-white to-slate-50 py-16 lg:py-24 border-b border-slate-200/70">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="text-center max-w-3xl mx-auto">
+            <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-brand-100/70 text-brand-700 text-xs font-semibold mb-6 shadow-sm border border-brand-200">
+                <span class="w-2 h-2 rounded-full bg-brand-600 animate-pulse"></span>
+                <span>استخراج زنده سوالات از ۸ کانال معتبر تلگرامی</span>
+            </div>
+            <h1 class="text-3xl sm:text-5xl font-black text-slate-900 tracking-tight leading-tight sm:leading-tight mb-6">
+                بانک هوشمند سوالات استخدامی و <span class="text-transparent bg-clip-text bg-gradient-to-l from-brand-600 to-indigo-600">موتور آزمون‌ساز آنلاین</span>
+            </h1>
+            <p class="text-base sm:text-lg text-slate-600 leading-relaxed mb-8 font-normal">
+                پلتفرم <span class="font-bold text-slate-900">تست ۹۸ (test98.ir)</span> تست‌های تالیفی و کنکورهای استخدامی را از معتبرترین کانال‌های تلگرامی پالایش و دسته‌بندی کرده و با شبیه‌ساز استاندارد کشوری و کارنامه تحلیلی در اختیار شما می‌گذارد.
+            </p>
+
+            <!-- دکمه‌های اقدام (CTA Buttons) -->
+            <div class="flex flex-col sm:flex-row items-center justify-center gap-3">
+                <a href="/exam/builder" class="w-full sm:w-auto px-8 py-3.5 rounded-xl bg-brand-600 hover:bg-brand-700 text-white font-bold text-base shadow-lg shadow-brand-500/25 transition-all hover:scale-[1.02] flex items-center justify-center gap-2">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path></svg>
+                    <span>شروع آزمون آنلاین رایگان</span>
+                </a>
+                <a href="/news" class="w-full sm:w-auto px-6 py-3.5 rounded-xl bg-white hover:bg-slate-50 text-slate-700 font-semibold text-base border border-slate-200 shadow-sm transition-all flex items-center justify-center gap-2">
+                    <svg class="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z"></path></svg>
+                    <span>آخرین دفترچه‌ها و اخبار استخدامی</span>
+                </a>
+            </div>
+        </div>
+
+        <!-- کارت‌های آمار کلیدی -->
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mt-16 max-w-4xl mx-auto">
+            <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm text-center">
+                <div class="text-3xl font-black text-brand-600 mb-1 font-mono">{{ total_questions }}</div>
+                <div class="text-xs font-semibold text-slate-600">سوال استخدامی فعال</div>
+            </div>
+            <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm text-center">
+                <div class="text-3xl font-black text-indigo-600 mb-1 font-mono">{{ total_exams }}</div>
+                <div class="text-xs font-semibold text-slate-600">آزمون برگزار شده</div>
+            </div>
+            <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm text-center">
+                <div class="text-3xl font-black text-emerald-600 mb-1 font-mono">{{ total_users + 120 }}</div>
+                <div class="text-xs font-semibold text-slate-600">داوطلب آزمون‌ها</div>
+            </div>
+            <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm text-center">
+                <div class="text-3xl font-black text-amber-600 mb-1 font-mono">۸</div>
+                <div class="text-xs font-semibold text-slate-600">کانال تلگرامی متصل</div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- بخش دسته‌بندی‌های آزمون (Exam Categories) -->
+<section class="py-16 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="flex items-center justify-between mb-8">
+        <div>
+            <h2 class="text-2xl font-black text-slate-900">بانک سوالات به تفکیک دروس آزمون</h2>
+            <p class="text-sm text-slate-500 mt-1">درس مورد نظر خود را انتخاب کرده و بلافاصله آزمون سفارشی بسازید</p>
+        </div>
+        <a href="/exam/builder" class="text-sm font-semibold text-brand-600 hover:text-brand-700 flex items-center gap-1">
+            <span>همه مباحث</span>
+            <svg class="w-4 h-4 rtl:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+        </a>
+    </div>
+
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        {% for cat in categories %}
+        <div class="bg-white rounded-2xl border border-slate-200 p-6 flex flex-col justify-between hover:shadow-md transition-shadow group">
+            <div>
+                <div class="w-12 h-12 rounded-xl bg-brand-50 text-brand-600 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                    {% if cat.code == 'icdl' %}
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
+                    {% elif cat.code == 'computer' %}
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h14M5 12a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v4a2 2 0 01-2 2M5 12a2 2 0 00-2 2v4a2 2 0 002 2h14a2 2 0 002-2v-4a2 2 0 00-2-2m-2-4h.01M17 16h.01"></path></svg>
+                    {% elif cat.code == 'laws' %}
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 6l3 1m0 0l-3 9a5.002 5.002 0 006.001 0M6 7l3 9M6 7l6-2m6 2l3-1m-3 1l-3 9a5.002 5.002 0 006.001 0M18 7l3 9m-3-9l-6-2m0-2v2m0 16V5m0 16H9m3 0h3"></path></svg>
+                    {% else %}
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path></svg>
+                    {% endif %}
+                </div>
+                <h3 class="font-bold text-slate-900 text-lg mb-2">{{ cat.name_fa }}</h3>
+                <p class="text-xs text-slate-500 leading-relaxed mb-4">{{ cat.description }}</p>
+            </div>
+            <div class="pt-4 border-t border-slate-100 flex items-center justify-between">
+                <span class="text-xs font-mono font-medium text-slate-400">{{ cat.question_count }} سوال تستی</span>
+                <a href="/exam/builder?category={{ cat.code }}" class="px-3 py-1.5 rounded-lg bg-brand-50 hover:bg-brand-100 text-brand-700 text-xs font-bold transition-colors">
+                    شروع آزمون ←
+                </a>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</section>
+
+<!-- بنر فراخوان آزمون سریع ۱۰ سوالی -->
+<section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-16">
+    <div class="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 rounded-3xl p-8 sm:p-12 text-white relative overflow-hidden shadow-xl">
+        <div class="relative z-10 max-w-2xl">
+            <span class="px-3 py-1 rounded-full bg-brand-500/20 text-brand-300 text-xs font-bold border border-brand-500/30">آزمون هوشمند روزانه</span>
+            <h2 class="text-2xl sm:text-3xl font-black mt-3 mb-4 leading-snug">
+                می‌خواهی سطح آمادگی استخدامی‌ات را در ۵ دقیقه بسنجی؟
+            </h2>
+            <p class="text-slate-300 text-sm leading-relaxed mb-6">
+                سیستم با ترکیب وزنی، ۱۰ تست مهم شامل سوالات پرتکرار و مباحث کلیدی را برای شما آماده می‌کند؛ بدون نیاز به ثبت‌نام شروع کنید.
+            </p>
+            <form action="/exam/create" method="post" class="inline">
+                <input type="hidden" name="category" value="all">
+                <input type="hidden" name="total_questions" value="10">
+                <input type="hidden" name="duration_minutes" value="10">
+                <input type="hidden" name="has_negative_marking" value="true">
+                <input type="hidden" name="filter_mode" value="smart">
+                <button type="submit" class="px-6 py-3 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-bold text-sm shadow-lg shadow-emerald-500/20 transition-all hover:scale-105">
+                    🚀 شروع آزمون سریع ۱۰ سوالی
+                </button>
+            </form>
+        </div>
+    </div>
+</section>
+
+<!-- بخش جدیدترین اخبار و اطلاعیه‌های استخدامی -->
+<section class="py-8 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="flex items-center justify-between mb-8">
+        <div>
+            <h2 class="text-2xl font-black text-slate-900">جدیدترین اخبار و دفترچه‌های استخدامی</h2>
+            <p class="text-sm text-slate-500 mt-1">رصد لحظه‌ای کانال‌های ایران‌استخدام و منابع رسمی</p>
+        </div>
+        <a href="/news" class="text-sm font-semibold text-brand-600 hover:text-brand-700 flex items-center gap-1">
+            <span>مشاهده همه اخبار</span>
+            <svg class="w-4 h-4 rtl:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+        </a>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        {% for news in latest_news %}
+        <article class="bg-white rounded-2xl border border-slate-200 p-5 flex flex-col justify-between hover:border-brand-300 transition-all shadow-sm">
+            <div>
+                <span class="text-[11px] font-bold text-rose-600 bg-rose-50 px-2.5 py-1 rounded-full mb-3 inline-block">
+                    {% if news.category == 'employment' %}آگهی استخدام{% else %}خبر اقتصادی{% endif %}
+                </span>
+                <h3 class="font-bold text-slate-900 text-sm leading-snug mb-3 line-clamp-2 hover:text-brand-600">
+                    <a href="/news/{{ news.slug }}">{{ news.title }}</a>
+                </h3>
+                <p class="text-xs text-slate-500 leading-relaxed line-clamp-3 mb-4">
+                    {{ news.summary }}
+                </p>
+            </div>
+            <div class="pt-3 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-400">
+                <span>{{ news.created_at | jalali }}</span>
+                <a href="/news/{{ news.slug }}" class="text-brand-600 font-bold hover:underline">مطالعه خبر و آزمون ←</a>
+            </div>
+        </article>
+        {% endfor %}
+    </div>
+</section>
+{% endblock %}

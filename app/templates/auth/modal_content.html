@@ -1,0 +1,50 @@
+<div class="text-center">
+    <div class="w-14 h-14 bg-emerald-100 text-emerald-600 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-sm">
+        <svg class="w-8 h-8" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 14H9v-2h2v2zm0-4H9V7h2v5z"/></svg>
+    </div>
+
+    <h3 class="text-xl font-bold text-slate-900 mb-1">ورود سریع با پیام‌رسان بله</h3>
+    <p class="text-xs text-slate-500 mb-6">بدون نیاز به پسورد یا هزینه پیامک، در کمتر از ۵ ثانیه وارد شوید</p>
+
+    <!-- روش اول: دکمه دیپ‌لینک عمیق (برای کاربران موبایل و دسکتاپ بله) -->
+    <div class="space-y-4 mb-6">
+        <a href="{{ session.bale_url }}" target="_blank" class="w-full inline-flex items-center justify-center gap-2 px-5 py-3.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-sm shadow-lg shadow-emerald-600/20 transition-all hover:scale-[1.02]">
+            <span>ورود تک‌کلیکی در ربات بله</span>
+            <svg class="w-4 h-4 rtl:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
+        </a>
+        <p class="text-[11px] text-slate-400">با زدن دکمه فوق و کلیک روی «شروع» در ربات بله، صفحه مرورگر شما خودکار وارد می‌شود.</p>
+    </div>
+
+    <!-- وضعیت بررسی خودکار با HTMX Polling -->
+    <div class="p-3 bg-slate-50 border border-slate-100 rounded-xl mb-6">
+        <div id="auth-status-container" hx-get="/auth/check/{{ session.token }}" hx-trigger="every 2s" hx-swap="outerHTML">
+            <div class="flex items-center justify-center gap-2 text-slate-600 py-1">
+                <svg class="animate-spin h-4 w-4 text-emerald-600" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                <span class="text-xs font-medium">منتظر تایید شما در اپلیکیشن بله...</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- خط جداکننده یا روش جایگزین کد OTP -->
+    <div class="relative my-6">
+        <div class="absolute inset-0 flex items-center"><div class="w-full border-t border-slate-200"></div></div>
+        <div class="relative flex justify-center text-xs"><span class="px-3 bg-white text-slate-400">یا ورود با کد یک‌بار مصرف</span></div>
+    </div>
+
+    <!-- روش دوم: وارد کردن کد دستی برای کاربران دسکتاپ -->
+    <div class="text-right">
+        <p class="text-xs text-slate-600 mb-2">اگر با کامپیوتر هستید، کد زیر را در ربات بله مشاهده یا ارسال کنید:</p>
+        <div class="flex items-center justify-center gap-2 bg-slate-100 p-3 rounded-xl mb-3 font-mono text-xl tracking-widest text-emerald-700 font-bold">
+            {{ session.otp_code }}
+        </div>
+        <form hx-post="/auth/verify-otp" hx-target="#otp-result" class="flex gap-2">
+            <input type="hidden" name="token" value="{{ session.token }}">
+            <input type="text" name="otp_code" placeholder="کد ۴ رقمی بله" maxlength="6" class="flex-1 px-3 py-2 border border-slate-200 rounded-xl text-center text-sm font-mono focus:ring-2 focus:ring-emerald-500 focus:outline-none" required>
+            <button type="submit" class="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-sm font-semibold transition-colors">تایید</button>
+        </form>
+        <div id="otp-result" class="mt-2 text-center"></div>
+    </div>
+</div>

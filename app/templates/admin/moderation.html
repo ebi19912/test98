@@ -1,0 +1,159 @@
+{% extends "base.html" %}
+
+{% block title %}صف بازبینی و تایید سریع سوالات (Tinder-Style) | تست ۹۸{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-10" x-data="moderationQueue()">
+    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between pb-6 mb-8 border-b border-slate-200 gap-4">
+        <div>
+            <div class="flex items-center gap-2 mb-1">
+                <span class="px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 text-xs font-bold font-mono">Quarantine Queue</span>
+                <h1 class="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">صف بازبینی سریع سوالات تلگرامی</h1>
+            </div>
+            <p class="text-xs text-slate-500">سوالاتی که پاسخ صریح نداشتند یا توسط کاربران گزارش شده‌اند</p>
+        </div>
+        <div class="flex items-center gap-2">
+            <span class="text-xs font-bold text-slate-600 bg-slate-100 px-3 py-1.5 rounded-xl font-mono">
+                {{ total_pending }} سوال در صف
+            </span>
+            <a href="/admin" class="text-xs text-brand-600 font-bold hover:underline">بازگشت به داشبورد</a>
+        </div>
+    </div>
+
+    <!-- راهنمای کلیدهای میانبر سریع کیبورد -->
+    <div class="bg-indigo-900 text-indigo-100 p-4 rounded-2xl mb-8 flex flex-wrap items-center justify-between gap-3 text-xs shadow-md">
+        <div class="flex items-center gap-2 font-bold">
+            <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+            <span>میانبرهای سریع کیبورد فعال است:</span>
+        </div>
+        <div class="flex items-center gap-3">
+            <span><kbd class="px-2 py-1 bg-indigo-800 rounded font-mono font-bold text-white">1</kbd> تا <kbd class="px-2 py-1 bg-indigo-800 rounded font-mono font-bold text-white">4</kbd> : انتخاب گزینه صحیح</span>
+            <span><kbd class="px-2 py-1 bg-emerald-700 rounded font-mono font-bold text-white">Enter</kbd> : تایید و انتشار</span>
+            <span><kbd class="px-2 py-1 bg-rose-700 rounded font-mono font-bold text-white">Del</kbd> : رد و حذف سوال</span>
+        </div>
+    </div>
+
+    <!-- لیست سوالات صف بررسی -->
+    {% if questions %}
+    <div class="space-y-8" id="moderation-cards">
+        {% for q in questions %}
+        <div id="q-mod-{{ q.id }}" class="bg-white rounded-3xl border border-slate-200 p-6 sm:p-8 shadow-sm">
+            <form hx-post="/admin/moderation-action" hx-target="#q-mod-{{ q.id }}" hx-swap="outerHTML">
+                <input type="hidden" name="question_id" value="{{ q.id }}">
+                <input type="hidden" name="action" id="action-{{ q.id }}" value="publish">
+
+                <div class="flex items-center justify-between mb-4">
+                    <div class="flex items-center gap-2">
+                        <span class="px-2.5 py-1 rounded-lg bg-slate-100 text-slate-800 font-mono text-xs font-black">شناسه #{{ q.id }}</span>
+                        <span class="text-xs font-bold text-brand-600 bg-brand-50 px-2 py-0.5 rounded-md">{{ q.category_name }}</span>
+                        <span class="text-[11px] text-slate-400 font-mono">مبدا: {{ q.source_channel }}</span>
+                    </div>
+                    {% if q.report_count > 0 %}
+                    <span class="text-xs font-bold text-rose-700 bg-rose-50 px-2.5 py-0.5 rounded-full">
+                        ⚠️ {{ q.report_count }} گزارش خطای داوطلبان
+                    </span>
+                    {% endif %}
+                </div>
+
+                <!-- صورت سوال (قابل ویرایش) -->
+                <div class="mb-4">
+                    <label class="block text-xs font-bold text-slate-500 mb-1">صورت سوال:</label>
+                    <textarea name="question_text" rows="2" class="w-full p-3 rounded-xl border border-slate-200 text-sm font-bold text-slate-900 focus:ring-2 focus:ring-brand-500 focus:outline-none">{{ q.question_text }}</textarea>
+                </div>
+
+                <!-- انتخاب گزینه صحیح با رادیوباتن -->
+                <div class="mb-5">
+                    <label class="block text-xs font-bold text-slate-500 mb-2">تعیین گزینه صحیح (کلیدهای ۱ تا ۴):</label>
+                    <div class="space-y-2">
+                        {% for opt in q.options %}
+                        {% set opt_idx = loop.index0 %}
+                        <label class="flex items-center p-3 rounded-xl border border-slate-200 cursor-pointer hover:bg-slate-50 transition-all has-[:checked]:border-emerald-600 has-[:checked]:bg-emerald-50">
+                            <input type="radio" name="correct_index" value="{{ opt_idx }}" {% if q.correct_index == opt_idx %}checked{% endif %} class="text-emerald-600 focus:ring-emerald-500">
+                            <span class="font-mono font-bold text-xs px-2 py-0.5 bg-slate-200 rounded mx-3 text-slate-700">{{ opt_idx + 1 }}</span>
+                            <span class="text-xs font-medium text-slate-800">{{ opt }}</span>
+                        </label>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <!-- پاسخ تشریحی (اختیاری) -->
+                <div class="mb-6">
+                    <label class="block text-xs font-bold text-slate-500 mb-1">توضیح یا پاسخ تشریحی:</label>
+                    <input type="text" name="explanation" value="{{ q.explanation or '' }}" placeholder="توضیح نکته سوال (اختیاری)" class="w-full p-3 rounded-xl border border-slate-200 text-xs text-slate-700 focus:ring-2 focus:ring-brand-500 focus:outline-none">
+                </div>
+
+                <!-- دکمه‌های اقدام -->
+                <div class="flex items-center justify-between pt-4 border-t border-slate-100">
+                    <button type="submit" onclick="document.getElementById('action-{{ q.id }}').value='reject'" class="px-5 py-2.5 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold text-xs transition-colors">
+                        ✕ رد و حذف سوال (Delete)
+                    </button>
+                    <button type="submit" onclick="document.getElementById('action-{{ q.id }}').value='publish'" class="px-6 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-md transition-all flex items-center gap-1.5">
+                        <span>✓ تایید و انتشار سوال (Enter)</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="text-center py-20 bg-white rounded-3xl border border-slate-200">
+        <div class="w-12 h-12 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center mx-auto mb-3 font-bold text-xl">
+            ✓
+        </div>
+        <h3 class="font-bold text-slate-900 text-base mb-1">صف بازبینی کاملاً خالی است!</h3>
+        <p class="text-xs text-slate-500 max-w-sm mx-auto mb-4">
+            تمام سوالات استخراج‌شده از تلگرام پالایش شده‌اند یا کلید مشخص داشته‌اند.
+        </p>
+        <a href="/admin" class="px-4 py-2 rounded-xl bg-slate-900 text-white font-bold text-xs">
+            بازگشت به داشبورد ادمین
+        </a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('alpine:init', () => {
+    Alpine.data('moderationQueue', () => ({
+        init() {
+            window.addEventListener('keydown', (e) => {
+                // اگر کاربر در حال تایپ در textarea یا input است نادیده بگیرد
+                if (['TEXTAREA', 'INPUT'].includes(e.target.tagName)) {
+                    if (e.key === 'Enter' && e.ctrlKey) {
+                        // Ctrl+Enter برای سابمیت فرم فعلی
+                        const form = e.target.closest('form');
+                        if (form) form.requestSubmit();
+                    }
+                    return;
+                }
+
+                // گرفتن اولین کارت موجود در صفحه
+                const firstCard = document.querySelector('#moderation-cards > div');
+                if (!firstCard) return;
+
+                const form = firstCard.querySelector('form');
+                if (!form) return;
+
+                if (['1', '2', '3', '4'].includes(e.key)) {
+                    const idx = parseInt(e.key) - 1;
+                    const radio = form.querySelectorAll('input[name="correct_index"]')[idx];
+                    if (radio) {
+                        radio.checked = true;
+                        radio.focus();
+                    }
+                } else if (e.key === 'Enter') {
+                    e.preventDefault();
+                    form.querySelector("input[name='action']").value = 'publish';
+                    form.requestSubmit();
+                } else if (e.key === 'Delete' || e.key === 'Backspace') {
+                    e.preventDefault();
+                    form.querySelector("input[name='action']").value = 'reject';
+                    form.requestSubmit();
+                }
+            });
+        }
+    }));
+});
+</script>
+{% endblock %}

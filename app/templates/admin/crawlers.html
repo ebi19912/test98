@@ -1,0 +1,110 @@
+{% extends "base.html" %}
+
+{% block title %}پایش و مدیریت خزشگر تلگرام | تست ۹۸{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between pb-6 mb-8 border-b border-slate-200 gap-4">
+        <div>
+            <h1 class="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight mb-1">پایش خزشگرها و جریان داده تلگرام</h1>
+            <p class="text-xs text-slate-500">کنترل اتصال Userbot، تنظیمات نگاشت کانال‌ها و استخراج دستی تاریخچه</p>
+        </div>
+        <div class="flex items-center gap-3">
+            <form hx-post="/admin/crawlers/sync-all" hx-target="#sync-all-status" class="inline">
+                <button type="submit" class="px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-md transition-all flex items-center gap-1.5">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+                    <span>استخراج آنی تمام ۸ کانال</span>
+                </button>
+            </form>
+            <a href="/admin" class="text-xs text-brand-600 font-bold hover:underline">بازگشت به داشبورد</a>
+        </div>
+    </div>
+    <div id="sync-all-status" class="mb-4"></div>
+
+    <!-- وضعیت اتصال Userbot تلگرام -->
+    <div class="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm mb-8 flex flex-wrap items-center justify-between gap-4">
+        <div class="flex items-center gap-3">
+            <div class="w-12 h-12 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center">
+                <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.64 6.8c-.15 1.58-.8 5.42-1.13 7.19-.14.75-.42 1-.68 1.03-.58.05-1.02-.38-1.58-.75-.88-.58-1.38-.94-2.23-1.5-.99-.65-.35-1.01.22-1.59.15-.15 2.71-2.48 2.76-2.69a.2.2 0 00-.05-.18c-.06-.05-.14-.03-.21-.02-.09.02-1.49.95-4.22 2.79-.4.27-.76.41-1.08.4-.36-.01-1.04-.2-1.55-.37-.63-.2-1.12-.31-1.08-.66.02-.18.27-.36.75-.55 2.92-1.27 4.86-2.11 5.83-2.51 2.78-1.16 3.35-1.36 3.73-1.36.08 0 .27.02.39.12.1.08.13.19.14.27-.01.06.01.24 0 .38z"/></svg>
+            </div>
+            <div>
+                <h3 class="font-bold text-slate-900 text-sm">سرویس تلگرام Telethon Userbot</h3>
+                <p class="text-xs text-slate-500 mt-0.5">
+                    وضعیت: {% if settings.TELEGRAM_ENABLED %}<span class="text-emerald-600 font-bold">فعال و در حال شنود آنی کانال‌ها</span>{% else %}<span class="text-amber-600 font-bold">حالت شبیه‌ساز آفلاین (کلیدهای API در .env هنوز وارد نشده)</span>{% endif %}
+                </p>
+            </div>
+        </div>
+        <div class="text-xs text-slate-400">
+            Session: <code class="bg-slate-100 px-2 py-1 rounded font-mono">{{ settings.TELEGRAM_SESSION_NAME }}</code>
+        </div>
+    </div>
+
+    <!-- جدول ۸ کانال -->
+    <div class="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm mb-8">
+        <h3 class="font-bold text-slate-900 text-base mb-4">کانال‌های تلگرامی تحت پوشش سامانه</h3>
+        <div class="overflow-x-auto">
+            <table class="w-full text-right text-xs">
+                <thead>
+                    <tr class="border-b border-slate-100 text-slate-400 pb-2">
+                        <th class="py-2.5 font-bold">کانال تلگرام</th>
+                        <th class="py-2.5 font-bold">نوع محتوا</th>
+                        <th class="py-2.5 font-bold">دسته‌بندی موضوعی</th>
+                        <th class="py-2.5 font-bold">تعداد استخراج</th>
+                        <th class="py-2.5 font-bold">آخرین فعالیت</th>
+                        <th class="py-2.5 font-bold text-left">عملیات</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100">
+                    {% for ch in channels %}
+                    <tr class="hover:bg-slate-50 transition-colors">
+                        <td class="py-3 font-bold text-slate-800">
+                            {{ ch.name_fa or ch.channel_username }}
+                            <a href="https://t.me/{{ ch.channel_username }}" target="_blank" class="text-brand-600 hover:underline mr-1 font-mono text-[11px]">
+                                (@{{ ch.channel_username }})
+                            </a>
+                        </td>
+                        <td class="py-3 font-mono font-bold text-slate-600">{{ ch.content_type }}</td>
+                        <td class="py-3 text-slate-600 font-medium">{{ ch.category_name }}</td>
+                        <td class="py-3 font-mono font-bold text-slate-800">{{ ch.total_extracted }} مورد</td>
+                        <td class="py-3 text-slate-400 font-mono">{{ ch.last_crawled_at or 'ثبت اولیه' }}</td>
+                        <td class="py-3 text-left">
+                            <form hx-post="/admin/crawlers/sync" hx-target="#sync-status-ch-{{ ch.id }}" class="inline">
+                                <input type="hidden" name="channel_username" value="{{ ch.channel_username }}">
+                                <input type="hidden" name="limit" value="100">
+                                <button type="submit" class="px-3 py-1.5 rounded-lg bg-brand-50 hover:bg-brand-100 text-brand-700 font-bold text-xs transition-colors">
+                                    استخراج ۱۰۰ پیام اخیر
+                                </button>
+                                <span id="sync-status-ch-{{ ch.id }}" class="inline-block mr-1"></span>
+                            </form>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- لاگ‌های اخیر خزشگر -->
+    <div class="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
+        <h3 class="font-bold text-slate-900 text-base mb-4">لاگ رویدادهای خزشگر</h3>
+        {% if logs %}
+        <div class="space-y-2">
+            {% for log in logs %}
+            <div class="p-3 rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-between text-xs font-mono">
+                <div class="flex items-center gap-3">
+                    <span class="px-2 py-0.5 rounded text-[10px] font-bold {% if log.status == 'success' %}bg-emerald-100 text-emerald-800{% else %}bg-rose-100 text-rose-800{% endif %}">
+                        {{ log.status }}
+                    </span>
+                    <span class="font-bold text-slate-700">@{{ log.channel_username }}</span>
+                    <span class="text-slate-500 font-sans">{{ log.message }} ({{ log.extracted_count }} پیام)</span>
+                </div>
+                <span class="text-slate-400 text-[11px]">{{ log.created_at }}</span>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <p class="text-xs text-slate-400 text-center py-6">هنوز لاگی ثبت نشده است.</p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

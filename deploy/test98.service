@@ -1,0 +1,24 @@
+[Unit]
+Description=Test98 Exam & Telegram Crawler Web Application (test98.ir)
+After=network.target
+
+[Service]
+Type=simple
+User=www-data
+Group=www-data
+WorkingDirectory=/var/www/test98
+EnvironmentFile=-/var/www/test98/.env
+Environment="PYTHONUNBUFFERED=1"
+Environment="PYTHONIOENCODING=utf-8"
+ExecStart=/var/www/test98/.venv/bin/python -m uvicorn main:app --host 127.0.0.1 --port 8000 --workers 2
+
+# سیاست راه‌اندازی مجدد در صورت بروز خطا
+Restart=always
+RestartSec=5s
+
+# امنیت و محدودیت دسترسی به منابع سیستم
+ProtectSystem=full
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target

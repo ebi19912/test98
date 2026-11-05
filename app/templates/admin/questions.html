@@ -1,0 +1,319 @@
+{% extends "base.html" %}
+
+{% block title %}مدیریت بانک سوالات | پنل مدیریت تست ۹۸{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10" x-data="{ newModalOpen: false, editModalOpen: false, currentQ: {} }">
+    <!-- هدر مدیریت سوالات -->
+    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between pb-6 mb-8 border-b border-slate-200 gap-4">
+        <div>
+            <div class="flex items-center gap-2 mb-1">
+                <span class="w-3 h-3 rounded-full bg-brand-600"></span>
+                <h1 class="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">مدیریت بانک جامع سوالات</h1>
+            </div>
+            <p class="text-xs text-slate-500">مشاهده، جستجو، ویرایش، حذف و ثبت سوالات تستی چهارگزینه‌ای</p>
+        </div>
+        <div class="flex items-center gap-3">
+            <button @click="newModalOpen = true" class="px-4 py-2.5 rounded-xl bg-brand-600 hover:bg-brand-700 text-white font-bold text-xs shadow-md transition-all flex items-center gap-1.5">
+                <span>+ ثبت سوال جدید دستی</span>
+            </button>
+            <a href="/admin/moderation" class="px-4 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold text-xs">
+                صف بازبینی سریع
+            </a>
+            <a href="/admin" class="text-xs text-brand-600 font-bold hover:underline">داشبورد ادمین</a>
+        </div>
+    </div>
+
+    <!-- فیلترها و جستجو -->
+    <form action="/admin/questions" method="get" class="bg-white rounded-2xl border border-slate-200 p-4 mb-6 shadow-sm flex flex-wrap items-center gap-3">
+        <!-- جستجو -->
+        <div class="flex-1 min-w-[200px]">
+            <input type="text" name="q" value="{{ search_query }}" placeholder="جستجو در متن سوال یا پاسخ تشریحی..." class="w-full px-3.5 py-2 text-xs rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-500">
+        </div>
+
+        <!-- فیلتر دسته -->
+        <select name="category" class="px-3 py-2 text-xs rounded-xl border border-slate-200 bg-slate-50 text-slate-700 focus:outline-none">
+            <option value="all">همه مباحث</option>
+            {% for cat in categories %}
+            <option value="{{ cat.code }}" {% if selected_category == cat.code %}selected{% endif %}>{{ cat.name_fa }}</option>
+            {% endfor %}
+        </select>
+
+        <!-- فیلتر وضعیت -->
+        <select name="status" class="px-3 py-2 text-xs rounded-xl border border-slate-200 bg-slate-50 text-slate-700 focus:outline-none">
+            <option value="all">همه وضعیت‌ها</option>
+            <option value="published" {% if selected_status == 'published' %}selected{% endif %}>منتشر شده</option>
+            <option value="needs_review" {% if selected_status == 'needs_review' %}selected{% endif %}>نیازمند بررسی</option>
+            <option value="rejected" {% if selected_status == 'rejected' %}selected{% endif %}>رد شده</option>
+        </select>
+
+        <!-- فیلتر کانال مبدا -->
+        <select name="channel" class="px-3 py-2 text-xs rounded-xl border border-slate-200 bg-slate-50 text-slate-700 focus:outline-none">
+            <option value="all">همه کانال‌ها</option>
+            {% for ch in channels %}
+            <option value="{{ ch }}" {% if selected_channel == ch %}selected{% endif %}>@{{ ch }}</option>
+            {% endfor %}
+        </select>
+
+        <button type="submit" class="px-5 py-2 rounded-xl bg-slate-900 text-white font-bold text-xs hover:bg-slate-800">
+            اعمال فیلتر
+        </button>
+    </form>
+
+    <!-- آمار کل -->
+    <div class="flex items-center justify-between text-xs text-slate-500 mb-4 px-1">
+        <span>مجموع سوالات منطبق: <strong class="text-slate-900 font-mono">{{ total_count }}</strong> سوال</span>
+        <span>صفحه <strong class="font-mono text-slate-900">{{ current_page }}</strong> از <strong class="font-mono text-slate-900">{{ total_pages }}</strong></span>
+    </div>
+
+    <!-- جدول سوالات -->
+    <div class="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm mb-6">
+        <div class="overflow-x-auto">
+            <table class="w-full text-right text-xs">
+                <thead>
+                    <tr class="bg-slate-50 border-b border-slate-200 text-slate-500 font-bold">
+                        <th class="py-3 px-4">شناسه</th>
+                        <th class="py-3 px-4">صورت سوال</th>
+                        <th class="py-3 px-4">مبحث</th>
+                        <th class="py-3 px-4">گزینه صحیح</th>
+                        <th class="py-3 px-4">وضعیت</th>
+                        <th class="py-3 px-4">مبدا</th>
+                        <th class="py-3 px-4 text-left">عملیات</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100">
+                    {% for q in questions %}
+                    <tr id="q-row-{{ q.id }}" class="hover:bg-slate-50/70 transition-colors">
+                        <td class="py-3.5 px-4 font-mono font-bold text-slate-400">#{{ q.id }}</td>
+                        <td class="py-3.5 px-4 max-w-md">
+                            <span class="font-bold text-slate-900 line-clamp-2">{{ q.question_text }}</span>
+                            {% if q.report_count > 0 %}
+                            <span class="text-[10px] text-rose-600 font-bold bg-rose-50 px-1.5 py-0.5 rounded mt-1 inline-block">
+                                ⚠️ {{ q.report_count }} گزارش خطا
+                            </span>
+                            {% endif %}
+                        </td>
+                        <td class="py-3.5 px-4 font-medium text-slate-600">{{ q.category_name }}</td>
+                        <td class="py-3.5 px-4">
+                            {% if q.correct_index is not none %}
+                            <span class="px-2 py-0.5 rounded bg-emerald-50 text-emerald-800 font-bold font-mono">
+                                گزینه {{ q.correct_index + 1 }}
+                            </span>
+                            {% else %}
+                            <span class="px-2 py-0.5 rounded bg-amber-50 text-amber-800 font-bold">
+                                نامشخص
+                            </span>
+                            {% endif %}
+                        </td>
+                        <td class="py-3.5 px-4">
+                            {% if q.status == 'published' %}
+                            <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800">منتشر شده</span>
+                            {% elif q.status == 'needs_review' %}
+                            <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800">نیازمند بررسی</span>
+                            {% else %}
+                            <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-100 text-rose-800">رد شده</span>
+                            {% endif %}
+                        </td>
+                        <td class="py-3.5 px-4 font-mono text-slate-400">@{{ q.source_channel }}</td>
+                        <td class="py-3.5 px-4 text-left">
+                            <div class="flex items-center justify-end gap-1.5">
+                                <button type="button" 
+                                        @click="currentQ = {{ q | tojson }}; editModalOpen = true"
+                                        class="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-[11px] transition-colors">
+                                    ویرایش
+                                </button>
+                                <button hx-post="/admin/questions/{{ q.id }}/delete" 
+                                        hx-target="#q-row-{{ q.id }}" 
+                                        hx-swap="outerHTML"
+                                        hx-confirm="آیا از حذف این سوال اطمینان دارید؟"
+                                        class="px-2.5 py-1 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-600 font-bold text-[11px] transition-colors">
+                                    حذف
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- صفحه‌بندی -->
+    {% if total_pages > 1 %}
+    <div class="flex items-center justify-center gap-1.5 mb-10">
+        {% for p in range(1, total_pages + 1) %}
+        {% if p <= 15 or p == current_page %}
+        <a href="/admin/questions?q={{ search_query }}&category={{ selected_category }}&status={{ selected_status }}&channel={{ selected_channel }}&page={{ p }}" class="w-8 h-8 rounded-lg font-mono text-xs font-bold flex items-center justify-center transition-colors {% if p == current_page %}bg-brand-600 text-white{% else %}bg-white border border-slate-200 text-slate-700 hover:bg-slate-50{% endif %}">
+            {{ p }}
+        </a>
+        {% endif %}
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- مودال ثبت سوال جدید -->
+    <div x-show="newModalOpen" x-cloak class="fixed inset-0 z-50 overflow-y-auto">
+        <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
+            <div @click="newModalOpen = false" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity"></div>
+            <div class="inline-block align-bottom bg-white rounded-3xl text-right overflow-hidden shadow-2xl transform transition-all sm:my-8 sm:align-middle sm:max-w-2xl sm:w-full p-6 sm:p-8 relative">
+                <h3 class="text-xl font-black text-slate-900 mb-4 pb-3 border-b border-slate-100">+ ثبت سوال تستی جدید دستی</h3>
+                <form action="/admin/questions/save" method="post" class="space-y-4 text-xs">
+                    <div>
+                        <label class="block font-bold text-slate-700 mb-1">دسته‌بندی موضوعی:</label>
+                        <select name="category" class="w-full p-2.5 rounded-xl border border-slate-200 bg-slate-50" required>
+                            {% for cat in categories %}
+                            <option value="{{ cat.code }}">{{ cat.name_fa }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="block font-bold text-slate-700 mb-1">صورت سوال:</label>
+                        <textarea name="question_text" rows="3" class="w-full p-3 rounded-xl border border-slate-200" required></textarea>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div>
+                            <label class="block font-bold text-slate-700 mb-1">گزینه ۱:</label>
+                            <input type="text" name="opt0" class="w-full p-2.5 rounded-xl border border-slate-200" required>
+                        </div>
+                        <div>
+                            <label class="block font-bold text-slate-700 mb-1">گزینه ۲:</label>
+                            <input type="text" name="opt1" class="w-full p-2.5 rounded-xl border border-slate-200" required>
+                        </div>
+                        <div>
+                            <label class="block font-bold text-slate-700 mb-1">گزینه ۳:</label>
+                            <input type="text" name="opt2" class="w-full p-2.5 rounded-xl border border-slate-200" required>
+                        </div>
+                        <div>
+                            <label class="block font-bold text-slate-700 mb-1">گزینه ۴:</label>
+                            <input type="text" name="opt3" class="w-full p-2.5 rounded-xl border border-slate-200" required>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                        <div>
+                            <label class="block font-bold text-slate-700 mb-1">گزینه صحیح:</label>
+                            <select name="correct_index" class="w-full p-2.5 rounded-xl border border-slate-200 bg-emerald-50 text-emerald-900 font-bold" required>
+                                <option value="0">گزینه ۱</option>
+                                <option value="1">گزینه ۲</option>
+                                <option value="2">گزینه ۳</option>
+                                <option value="3">گزینه ۴</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block font-bold text-slate-700 mb-1">سطح دشواری:</label>
+                            <select name="difficulty_level" class="w-full p-2.5 rounded-xl border border-slate-200">
+                                <option value="easy">آسان</option>
+                                <option value="medium" selected>متوسط</option>
+                                <option value="hard">دشوار</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block font-bold text-slate-700 mb-1">وضعیت انتشار:</label>
+                            <select name="status" class="w-full p-2.5 rounded-xl border border-slate-200">
+                                <option value="published" selected>منتشر شده</option>
+                                <option value="needs_review">نیازمند بررسی</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block font-bold text-slate-700 mb-1">پاسخ تشریحی و نکته کلیدی (اختیاری):</label>
+                        <textarea name="explanation" rows="2" class="w-full p-2.5 rounded-xl border border-slate-200"></textarea>
+                    </div>
+
+                    <div class="flex items-center justify-end gap-2 pt-4 border-t border-slate-100">
+                        <button type="button" @click="newModalOpen = false" class="px-4 py-2 rounded-xl bg-slate-100 text-slate-600 font-bold">انصراف</button>
+                        <button type="submit" class="px-6 py-2 rounded-xl bg-brand-600 text-white font-bold shadow-md">ذخیره و ثبت</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- مودال ویرایش سوال -->
+    <div x-show="editModalOpen" x-cloak class="fixed inset-0 z-50 overflow-y-auto">
+        <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
+            <div @click="editModalOpen = false" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity"></div>
+            <div class="inline-block align-bottom bg-white rounded-3xl text-right overflow-hidden shadow-2xl transform transition-all sm:my-8 sm:align-middle sm:max-w-2xl sm:w-full p-6 sm:p-8 relative">
+                <h3 class="text-xl font-black text-slate-900 mb-4 pb-3 border-b border-slate-100">ویرایش سوال تستی #<span x-text="currentQ.id"></span></h3>
+                <form action="/admin/questions/save" method="post" class="space-y-4 text-xs">
+                    <input type="hidden" name="question_id" :value="currentQ.id">
+
+                    <div>
+                        <label class="block font-bold text-slate-700 mb-1">دسته‌بندی موضوعی:</label>
+                        <select name="category" class="w-full p-2.5 rounded-xl border border-slate-200 bg-slate-50" x-model="currentQ.category" required>
+                            {% for cat in categories %}
+                            <option value="{{ cat.code }}">{{ cat.name_fa }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="block font-bold text-slate-700 mb-1">صورت سوال:</label>
+                        <textarea name="question_text" rows="3" class="w-full p-3 rounded-xl border border-slate-200" x-model="currentQ.question_text" required></textarea>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div>
+                            <label class="block font-bold text-slate-700 mb-1">گزینه ۱:</label>
+                            <input type="text" name="opt0" class="w-full p-2.5 rounded-xl border border-slate-200" :value="currentQ.options ? currentQ.options[0] : ''" required>
+                        </div>
+                        <div>
+                            <label class="block font-bold text-slate-700 mb-1">گزینه ۲:</label>
+                            <input type="text" name="opt1" class="w-full p-2.5 rounded-xl border border-slate-200" :value="currentQ.options ? currentQ.options[1] : ''" required>
+                        </div>
+                        <div>
+                            <label class="block font-bold text-slate-700 mb-1">گزینه ۳:</label>
+                            <input type="text" name="opt2" class="w-full p-2.5 rounded-xl border border-slate-200" :value="currentQ.options ? currentQ.options[2] : ''" required>
+                        </div>
+                        <div>
+                            <label class="block font-bold text-slate-700 mb-1">گزینه ۴:</label>
+                            <input type="text" name="opt3" class="w-full p-2.5 rounded-xl border border-slate-200" :value="currentQ.options ? currentQ.options[3] : ''" required>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                        <div>
+                            <label class="block font-bold text-slate-700 mb-1">گزینه صحیح:</label>
+                            <select name="correct_index" class="w-full p-2.5 rounded-xl border border-slate-200 bg-emerald-50 text-emerald-900 font-bold" x-model="currentQ.correct_index" required>
+                                <option value="0">گزینه ۱</option>
+                                <option value="1">گزینه ۲</option>
+                                <option value="2">گزینه ۳</option>
+                                <option value="3">گزینه ۴</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block font-bold text-slate-700 mb-1">سطح دشواری:</label>
+                            <select name="difficulty_level" class="w-full p-2.5 rounded-xl border border-slate-200" x-model="currentQ.difficulty_level">
+                                <option value="easy">آسان</option>
+                                <option value="medium">متوسط</option>
+                                <option value="hard">دشوار</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block font-bold text-slate-700 mb-1">وضعیت انتشار:</label>
+                            <select name="status" class="w-full p-2.5 rounded-xl border border-slate-200" x-model="currentQ.status">
+                                <option value="published">منتشر شده</option>
+                                <option value="needs_review">نیازمند بررسی</option>
+                                <option value="rejected">رد شده</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block font-bold text-slate-700 mb-1">پاسخ تشریحی و نکته کلیدی:</label>
+                        <textarea name="explanation" rows="2" class="w-full p-2.5 rounded-xl border border-slate-200" x-model="currentQ.explanation"></textarea>
+                    </div>
+
+                    <div class="flex items-center justify-end gap-2 pt-4 border-t border-slate-100">
+                        <button type="button" @click="editModalOpen = false" class="px-4 py-2 rounded-xl bg-slate-100 text-slate-600 font-bold">انصراف</button>
+                        <button type="submit" class="px-6 py-2 rounded-xl bg-brand-600 text-white font-bold shadow-md">به‌روزرسانی تغییرات</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

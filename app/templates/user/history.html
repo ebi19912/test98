@@ -1,0 +1,176 @@
+{% extends "base.html" %}
+
+{% block title %}سوابق و تاریخچه آزمون‌ها | تست ۹۸{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <!-- هدر صفحه -->
+    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between pb-6 mb-8 border-b border-slate-200 gap-4">
+        <div>
+            <div class="flex items-center gap-2 mb-1">
+                <a href="/user/dashboard" class="text-xs text-brand-600 hover:underline">میز کار داوطلب</a>
+                <span class="text-xs text-slate-400">/</span>
+                <span class="text-xs text-slate-600 font-bold">تاریخچه آزمون‌ها</span>
+            </div>
+            <h1 class="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">سوابق کامل آزمون‌های آزمایشی</h1>
+            <p class="text-xs text-slate-500 mt-1">مشاهده کارنامه‌ها، ترازهای کشوری، ریز پاسخ‌ها و روند رشد تحصیلی شما</p>
+        </div>
+        <div class="flex items-center gap-2">
+            <a href="/exam/builder" class="px-4 py-2.5 rounded-xl bg-brand-600 hover:bg-brand-700 text-white font-bold text-xs shadow-md shadow-brand-500/20 transition-all flex items-center gap-1.5">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+                <span>شروع آزمون جدید</span>
+            </a>
+            <a href="/user/dashboard" class="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs transition-colors">
+                بازگشت به داشبورد
+            </a>
+        </div>
+    </div>
+
+    <!-- کارت‌های آمار تجمیعی -->
+    <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 mb-8">
+        <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm text-center">
+            <span class="text-[11px] font-semibold text-slate-400 block mb-1">تعداد آزمون‌ها</span>
+            <span class="text-2xl font-black font-mono text-slate-800">{{ stats.total_attempts }}</span>
+        </div>
+        <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm text-center">
+            <span class="text-[11px] font-semibold text-slate-400 block mb-1">میانگین درصد کل</span>
+            <span class="text-2xl font-black font-mono text-brand-600">{{ stats.avg_score }}%</span>
+        </div>
+        <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm text-center">
+            <span class="text-[11px] font-semibold text-slate-400 block mb-1">بالاترین درصد</span>
+            <span class="text-2xl font-black font-mono text-emerald-600">{{ stats.max_score }}%</span>
+        </div>
+        <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm text-center">
+            <span class="text-[11px] font-semibold text-emerald-600 block mb-1">کل پاسخ‌های درست</span>
+            <span class="text-2xl font-black font-mono text-emerald-700">{{ stats.total_correct }}</span>
+        </div>
+        <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm text-center">
+            <span class="text-[11px] font-semibold text-rose-600 block mb-1">کل پاسخ‌های نادرست</span>
+            <span class="text-2xl font-black font-mono text-rose-700">{{ stats.total_wrong }}</span>
+        </div>
+        <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm text-center">
+            <span class="text-[11px] font-semibold text-slate-400 block mb-1">کل سوالات حل شده</span>
+            <span class="text-2xl font-black font-mono text-indigo-600">{{ stats.total_solved }} تست</span>
+        </div>
+    </div>
+
+    <!-- نوار فیلتر براساس درس و دسته -->
+    <div class="bg-white rounded-2xl border border-slate-200 p-4 mb-6 shadow-sm flex flex-col sm:flex-row items-center justify-between gap-4">
+        <form method="GET" action="/user/history" class="flex flex-wrap items-center gap-3 w-full sm:w-auto">
+            <label class="text-xs font-bold text-slate-700">فیلتر درس:</label>
+            <select name="category" onchange="this.form.submit()" class="px-3 py-2 rounded-xl border border-slate-200 text-xs font-medium text-slate-700 focus:outline-none focus:border-brand-500 bg-slate-50">
+                <option value="">همه درس‌ها و حیطه‌ها</option>
+                {% for cat in categories %}
+                <option value="{{ cat.code }}" {% if current_category == cat.code %}selected{% endif %}>{{ cat.name_fa }}</option>
+                {% endfor %}
+            </select>
+            {% if current_category %}
+            <a href="/user/history" class="text-xs font-semibold text-rose-600 hover:underline">حذف فیلتر</a>
+            {% endif %}
+        </form>
+
+        <span class="text-xs text-slate-400">
+            مجموع سوابق: <strong class="text-slate-700 font-mono">{{ total_items }}</strong> آزمون
+        </span>
+    </div>
+
+    <!-- جدول سوابق آزمون‌ها -->
+    <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+        {% if attempts %}
+        <div class="overflow-x-auto">
+            <table class="w-full text-right text-xs">
+                <thead>
+                    <tr class="bg-slate-50 border-b border-slate-200 text-slate-500">
+                        <th class="py-3.5 px-4 font-bold">شناسه</th>
+                        <th class="py-3.5 px-4 font-bold">عنوان / درس آزمون</th>
+                        <th class="py-3.5 px-4 font-bold">حالت</th>
+                        <th class="py-3.5 px-4 font-bold">درصد نهایی</th>
+                        <th class="py-3.5 px-4 font-bold">تراز کشوری</th>
+                        <th class="py-3.5 px-4 font-bold">درست / غلط / نزده</th>
+                        <th class="py-3.5 px-4 font-bold">مدت زمان</th>
+                        <th class="py-3.5 px-4 font-bold">تاریخ برگزاری</th>
+                        <th class="py-3.5 px-4 font-bold text-center">عملیات</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100">
+                    {% for item in attempts %}
+                    <tr class="hover:bg-slate-50/80 transition-colors">
+                        <td class="py-3 px-4 font-mono font-bold text-slate-400">#{{ item.id }}</td>
+                        <td class="py-3 px-4">
+                            <span class="font-bold text-slate-900 block">{{ item.category_name or 'آزمون جامع' }}</span>
+                            <span class="text-[10px] text-slate-400 font-mono">{{ item.total_questions }} سوال</span>
+                        </td>
+                        <td class="py-3 px-4">
+                            {% if item.exam_type == 'standard' %}
+                            <span class="px-2 py-0.5 rounded-md bg-indigo-50 text-indigo-700 font-medium text-[11px] border border-indigo-100">آزمون جامع</span>
+                            {% else %}
+                            <span class="px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-700 font-medium text-[11px] border border-emerald-100">آزمون سفارشی</span>
+                            {% endif %}
+                        </td>
+                        <td class="py-3 px-4 font-mono font-black text-sm {% if item.raw_score >= 50 %}text-emerald-600{% elif item.raw_score >= 25 %}text-amber-600{% else %}text-rose-600{% endif %}">
+                            {{ item.raw_score }}%
+                        </td>
+                        <td class="py-3 px-4 font-mono font-bold text-indigo-600">
+                            {{ item.t_score or 500 }}
+                        </td>
+                        <td class="py-3 px-4 font-mono text-[11px]">
+                            <span class="text-emerald-600 font-bold">{{ item.correct_count }} درست</span> /
+                            <span class="text-rose-600 font-bold">{{ item.wrong_count }} غلط</span> /
+                            <span class="text-slate-400">{{ item.unanswered_count }} نزده</span>
+                        </td>
+                        <td class="py-3 px-4 text-slate-500 font-mono text-[11px]">
+                            {% if item.is_finished %}
+                            <span class="text-emerald-600 font-bold">کامل شده</span>
+                            {% else %}
+                            <span class="text-amber-600 font-bold">ناتمام</span>
+                            {% endif %}
+                        </td>
+                        <td class="py-3 px-4 text-slate-400 font-mono text-[11px]">
+                            {{ item.started_at | jalali }}
+                        </td>
+                        <td class="py-3 px-4 text-center">
+                            <a href="/exam/result/{{ item.id }}" class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-brand-50 hover:bg-brand-100 text-brand-700 font-bold text-xs transition-colors">
+                                <span>مشاهده کارنامه</span>
+                                <svg class="w-3.5 h-3.5 rtl:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- صفحه‌بندی -->
+        {% if total_pages > 1 %}
+        <div class="p-4 bg-slate-50 border-t border-slate-200 flex items-center justify-between">
+            <span class="text-xs text-slate-500">صفحه {{ page }} از {{ total_pages }}</span>
+            <div class="flex items-center gap-1.5">
+                {% if page > 1 %}
+                <a href="/user/history?page={{ page - 1 }}{% if current_category %}&category={{ current_category }}{% endif %}" class="px-3 py-1.5 rounded-lg bg-white border border-slate-200 text-xs font-bold text-slate-700 hover:bg-slate-100">
+                    صفحه قبلی
+                </a>
+                {% endif %}
+                {% if page < total_pages %}
+                <a href="/user/history?page={{ page + 1 }}{% if current_category %}&category={{ current_category }}{% endif %}" class="px-3 py-1.5 rounded-lg bg-white border border-slate-200 text-xs font-bold text-slate-700 hover:bg-slate-100">
+                    صفحه بعدی
+                </a>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+
+        {% else %}
+        <div class="text-center py-16 px-4">
+            <div class="w-16 h-16 rounded-full bg-slate-100 flex items-center justify-center mx-auto mb-4 text-slate-400">
+                <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path></svg>
+            </div>
+            <h3 class="text-sm font-bold text-slate-800 mb-1">هیچ آزمونی یافت نشد</h3>
+            <p class="text-xs text-slate-400 max-w-sm mx-auto mb-4">شما تاکنون در این درس آزمونی ثبت نکرده‌اید یا آزمونی به اتمام نرسیده است.</p>
+            <a href="/exam/builder" class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-brand-600 text-white font-bold text-xs hover:bg-brand-700 transition-colors shadow-sm">
+                + ساخت و شروع اولین آزمون
+            </a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
