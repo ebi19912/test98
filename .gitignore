@@ -1,0 +1,24 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+# Virtual Environment
+.venv/
+venv/
+ENV/
+
+# Environment Variables & Secrets
+.env
+*.session
+*.session-journal
+
+# Database
+test98.db-shm
+test98.db-wal
+
+# IDE
+.vscode/
+.idea/
