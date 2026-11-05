@@ -99,9 +99,12 @@ d:\test98\
 ├── Dockerfile                  # کانتینر داکر پروداکشن بر پایه Python 3.11-slim
 ├── docker-compose.yml          # اجرای تک‌دستوری کل سرویس‌ها با داکر
 ├── DOCUMENTATION.md            # مستندات جامع فنی و معماری سامانه
+├── BALE_SETUP_GUIDE.md         # راهنمای کامل اتصال ربات پیام‌رسان بله
 ├── requirements.txt            # پکیج‌های پایتون (UTF-8)
 ├── README.md                   # راهنمای سریع پروژه
 ├── test98.db                   # پایگاه داده SQLite3 در حالت WAL با ایندکس‌های پیشرفته
+├── scripts/
+│   └── setup_bale.py           # اسکریپت خودکار اعتبارسنجی و ثبت وب‌هوک ربات بله
 ├── deploy/                     # اسکریپت‌ها و فایل‌های استقرار روی سرور لینوکس (VPS)
 │   ├── deploy.sh               # اسکریپت خودکار نصب وابستگی‌ها، Nginx و Systemd
 │   ├── nginx.conf              # پیکربندی Nginx Reverse Proxy و SSL

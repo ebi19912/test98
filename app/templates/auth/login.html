@@ -3,181 +3,122 @@
 {% block title %}ورود به سامانه | تست ۹۸ (test98.ir){% endblock %}
 
 {% block content %}
-<div class="max-w-4xl mx-auto px-4 py-12">
-    <!-- هدر صفحه -->
-    <div class="text-center mb-10">
-        <div class="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-tr from-brand-600 to-indigo-600 text-white font-black text-2xl shadow-lg shadow-brand-500/20 mb-4">
-            ۹۸
-        </div>
-        <h1 class="text-3xl font-black text-slate-900 tracking-tight mb-2">ورود به پلتفرم تست ۹۸</h1>
-        <p class="text-sm text-slate-500 max-w-md mx-auto">
-            برای تست و بررسی تمام بخش‌ها می‌توانید بلافاصله با حساب‌های دمو وارد شوید، یا با پیام‌رسان بله احراز هویت کنید.
-        </p>
-    </div>
+<div class="min-h-[80vh] flex items-center justify-center px-4 py-12 relative overflow-hidden">
+    <!-- پس‌زمینه نوری و گرادیانت‌های محو مدرن -->
+    <div class="absolute top-1/4 -right-24 w-96 h-96 bg-brand-500/10 rounded-full blur-3xl pointer-events-none"></div>
+    <div class="absolute bottom-1/4 -left-24 w-96 h-96 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none"></div>
 
-    <!-- بخش کارت‌های ورود سریع دمو -->
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-12">
-        <!-- ۱. کارت دمو داوطلب -->
-        <div class="bg-white rounded-3xl border-2 border-brand-200 p-6 sm:p-8 shadow-sm hover:shadow-md hover:border-brand-500 transition-all flex flex-col justify-between relative overflow-hidden group">
-            <div class="absolute -left-10 -top-10 w-32 h-32 bg-brand-50 rounded-full group-hover:scale-125 transition-transform"></div>
-            
-            <div class="relative z-10">
-                <div class="flex items-center justify-between mb-4">
-                    <div class="w-12 h-12 rounded-2xl bg-brand-100 text-brand-700 flex items-center justify-center text-xl font-bold">
-                        🎓
-                    </div>
-                    <span class="px-3 py-1 rounded-full text-xs font-bold bg-brand-50 text-brand-700 border border-brand-200">
-                        پنل داوطلب
-                    </span>
+    <div class="w-full max-w-xl relative z-10">
+        <!-- کارت اصلی ورود شیشه‌ای -->
+        <div class="bg-white/95 backdrop-blur-xl rounded-3xl border border-slate-200 shadow-2xl p-6 sm:p-10 transition-all">
+            <!-- لوگو و عنوان -->
+            <div class="text-center mb-8">
+                <div class="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-tr from-brand-600 via-indigo-600 to-violet-600 text-white font-black text-2xl shadow-xl shadow-brand-500/25 mb-4 hover:scale-105 transition-transform duration-300">
+                    ۹۸
                 </div>
-
-                <h2 class="text-xl font-black text-slate-900 mb-2">دمو داوطلب آزمون</h2>
-                <p class="text-xs text-slate-500 mb-6 leading-relaxed">
-                    ورود به عنوان داوطلب استخدامی برای تجربه شرکت در آزمون، مرور لایتنر و تحلیل نتایج
+                <h1 class="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">ورود به پلتفرم تست ۹۸</h1>
+                <p class="text-xs sm:text-sm text-slate-500 mt-1.5">
+                    سامانه هوشمند استخراج سوالات و آزمون‌ساز استخدامی کشور
                 </p>
-
-                <!-- امکانات پنل کاربر -->
-                <ul class="space-y-2.5 text-xs text-slate-600 mb-8">
-                    <li class="flex items-center gap-2">
-                        <svg class="w-4 h-4 text-emerald-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
-                        <span>داشبورد اختصاصی و تحلیل آمادگی دروس با نوار پیشرفت</span>
-                    </li>
-                    <li class="flex items-center gap-2">
-                        <svg class="w-4 h-4 text-emerald-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
-                        <span>ساخت آزمون‌های شبیه‌ساز با محاسبه تراز کشوری (T-Score)</span>
-                    </li>
-                    <li class="flex items-center gap-2">
-                        <svg class="w-4 h-4 text-emerald-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
-                        <span>جعبه لایتنر ۵ مرحله‌ای هوشمند و تثبیت حافظه</span>
-                    </li>
-                    <li class="flex items-center gap-2">
-                        <svg class="w-4 h-4 text-emerald-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
-                        <span>دکمه گزارش اشکال در هر سوال به مدیریت</span>
-                    </li>
-                </ul>
             </div>
 
-            <div class="relative z-10 pt-4 border-t border-slate-100">
-                <a href="/auth/demo-login?role=user" class="w-full py-3 px-4 rounded-2xl bg-brand-600 hover:bg-brand-700 text-white font-black text-sm flex items-center justify-center gap-2 shadow-lg shadow-brand-500/25 transition-all">
-                    <span>ورود به پنل داوطلب آزمون</span>
-                    <svg class="w-4 h-4 rtl:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
-                </a>
-            </div>
-        </div>
-
-        <!-- ۲. کارت دمو ادمین -->
-        <div class="bg-white rounded-3xl border-2 border-indigo-200 p-6 sm:p-8 shadow-sm hover:shadow-md hover:border-indigo-500 transition-all flex flex-col justify-between relative overflow-hidden group">
-            <div class="absolute -left-10 -top-10 w-32 h-32 bg-indigo-50 rounded-full group-hover:scale-125 transition-transform"></div>
-
-            <div class="relative z-10">
-                <div class="flex items-center justify-between mb-4">
-                    <div class="w-12 h-12 rounded-2xl bg-indigo-100 text-indigo-700 flex items-center justify-center text-xl font-bold">
-                        👑
+            <!-- بخش ورود بدون رمز با پیام‌رسان بله -->
+            <div class="bg-gradient-to-br from-emerald-50/70 via-teal-50/40 to-slate-50 rounded-2xl border border-emerald-200/80 p-5 sm:p-6 mb-8 relative">
+                <div class="flex items-center gap-3 mb-4 pb-3 border-b border-emerald-100">
+                    <div class="w-10 h-10 rounded-xl bg-emerald-600 text-white flex items-center justify-center text-lg font-bold shadow-md shadow-emerald-600/30">
+                        📱
                     </div>
-                    <span class="px-3 py-1 rounded-full text-xs font-bold bg-indigo-50 text-indigo-700 border border-indigo-200">
-                        پنل مدیریت کل
-                    </span>
+                    <div>
+                        <div class="flex items-center gap-2">
+                            <h2 class="text-sm font-black text-slate-900">ورود بدون رمز با پیام‌رسان بله</h2>
+                            <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-200">پیشنهادی</span>
+                        </div>
+                        <p class="text-[11px] text-slate-500 mt-0.5">سریع و آنی بدون نیاز به رمز عبور و هزینه پیامک</p>
+                    </div>
                 </div>
 
-                <h2 class="text-xl font-black text-slate-900 mb-2">دمو مدیر سامانه (Admin)</h2>
-                <p class="text-xs text-slate-500 mb-6 leading-relaxed">
-                    ورود به عنوان مدیر کل سایت با دسترسی به مدیریت ۱۰۰٪ سوالات، خزشگرها و گزارش‌ها
-                </p>
-
-                <!-- امکانات پنل ادمین -->
-                <ul class="space-y-2.5 text-xs text-slate-600 mb-8">
-                    <li class="flex items-center gap-2">
-                        <svg class="w-4 h-4 text-indigo-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
-                        <span>مشاهده تمام سوالات بدون استثنا با فیلتر درس و منبع کانال</span>
-                    </li>
-                    <li class="flex items-center gap-2">
-                        <svg class="w-4 h-4 text-indigo-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
-                        <span>ویرایش کامل صورت سوال، ۴ گزینه، کلید صحیح و پاسخ تشریحی</span>
-                    </li>
-                    <li class="flex items-center gap-2">
-                        <svg class="w-4 h-4 text-indigo-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
-                        <span>مانیتورینگ لحظه‌ای ۸ خزشگر تلگرام و دکمه استخراج فوری دستی</span>
-                    </li>
-                    <li class="flex items-center gap-2">
-                        <svg class="w-4 h-4 text-indigo-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
-                        <span>بررسی و رفع اشکال گزارش‌های خطای ارسالی توسط کاربران</span>
-                    </li>
-                </ul>
-            </div>
-
-            <div class="relative z-10 pt-4 border-t border-slate-100">
-                <a href="/auth/demo-login?role=admin" class="w-full py-3 px-4 rounded-2xl bg-indigo-600 hover:bg-indigo-700 text-white font-black text-sm flex items-center justify-center gap-2 shadow-lg shadow-indigo-500/25 transition-all">
-                    <span>ورود به پنل مدیریت کل (Admin)</span>
-                    <svg class="w-4 h-4 rtl:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
-                </a>
-            </div>
-        </div>
-    </div>
-
-    <!-- بخش ورود اصطکاک‌صفر با پیام‌رسان بله -->
-    <div class="bg-white rounded-3xl border border-slate-200 p-6 sm:p-8 shadow-sm">
-        <div class="flex items-center gap-3 pb-4 mb-6 border-b border-slate-100">
-            <div class="w-10 h-10 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center text-lg font-bold">
-                📱
-            </div>
-            <div>
-                <h3 class="text-base font-extrabold text-slate-900">ورود بدون رمز با پیام‌رسان بله</h3>
-                <p class="text-xs text-slate-400">سریع‌ترین و امن‌ترین شیوه ورود با شماره همراه شما بدون نیاز به پسورد</p>
-            </div>
-        </div>
-
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
-            <!-- روش اول: دیپ لینک بله در موبایل -->
-            <div class="bg-slate-50 rounded-2xl p-6 border border-slate-200 text-center flex flex-col justify-between h-full">
-                <div>
-                    <span class="text-xs font-bold text-slate-400 block mb-2">روش اول: مخصوص موبایل و تبلت</span>
-                    <h4 class="text-sm font-black text-slate-800 mb-3">تایید فوری از طریق اپلیکیشن بله</h4>
-                    <p class="text-xs text-slate-500 leading-relaxed mb-6">
-                        با لمس دکمه زیر، ربات رسمی تست ۹۸ در بله باز شده و با ارسال استارت، بلافاصله وارد سایت می‌شوید.
-                    </p>
-                </div>
-
-                <div>
-                    <a href="{{ session.deep_link }}" target="_blank" class="w-full py-3 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs inline-flex items-center justify-center gap-2 shadow-sm transition-colors">
-                        <span>باز کردن ربات بله</span>
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
+                <!-- دکمه ورود مستقیم دیپ‌لینک -->
+                <div class="space-y-4">
+                    <a href="{{ session.bale_url }}" target="_blank" class="w-full py-3.5 px-4 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold text-xs sm:text-sm flex items-center justify-center gap-2 shadow-lg shadow-emerald-600/25 transition-all duration-300 hover:scale-[1.01] active:scale-[0.99]">
+                        <span>تایید و ورود از طریق اپلیکیشن بله</span>
+                        <svg class="w-4 h-4 rtl:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
                     </a>
-                    <!-- پولینگ وضعیت HTMX -->
-                    <div id="auth-status-container" class="mt-3">
-                        <div hx-get="/auth/check/{{ session.token }}" hx-trigger="every 2s" hx-swap="outerHTML" class="text-[11px] text-slate-400 flex items-center justify-center gap-1.5">
-                            <span class="w-2 h-2 rounded-full bg-emerald-500 animate-ping"></span>
-                            <span>منتظر لمس شروع در ربات بله...</span>
+
+                    <!-- نمایش وضعیت انتظار پولینگ HTMX -->
+                    <div class="bg-white/80 backdrop-blur-sm rounded-xl p-3 border border-emerald-100 flex items-center justify-center gap-2">
+                        <div hx-get="/auth/check/{{ session.token }}" hx-trigger="every 2s" hx-swap="outerHTML" class="text-xs text-slate-600 flex items-center gap-2">
+                            <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-ping"></span>
+                            <span class="font-medium">در انتظار تایید شما در اپلیکیشن بله...</span>
                         </div>
                     </div>
+
+                    <!-- بخش کد یکبار مصرف عددی دستی برای دسکتاپ -->
+                    <div class="pt-4 border-t border-emerald-100/80">
+                        <div class="flex items-center justify-between text-xs text-slate-600 mb-2">
+                            <span>یا ارسال کد ۴ رقمی در ربات:</span>
+                            <span class="font-mono font-bold text-emerald-700 bg-emerald-100/80 px-2 py-0.5 rounded-md">@{{ settings.BALE_BOT_USERNAME }}</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <div class="py-2 px-4 bg-white rounded-xl border border-emerald-300 font-mono text-xl font-black text-emerald-700 tracking-widest shrink-0 shadow-sm">
+                                {{ session.otp_code }}
+                            </div>
+                            <form hx-post="/auth/verify-otp" hx-target="#otp-result" class="flex-1 flex gap-2">
+                                <input type="hidden" name="token" value="{{ session.token }}">
+                                <input type="text" name="otp_code" placeholder="کد تایید..." maxlength="6" class="w-full px-3 py-2 text-center font-mono font-bold text-slate-800 text-xs rounded-xl border border-slate-300 bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                                <button type="submit" class="px-4 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold shrink-0 transition-colors">
+                                    ثبت
+                                </button>
+                            </form>
+                        </div>
+                        <div id="otp-result" class="mt-2 text-xs"></div>
+                    </div>
                 </div>
             </div>
 
-            <!-- روش دوم: کد یکبار مصرف عددی در کامپیوتر -->
-            <div class="bg-slate-50 rounded-2xl p-6 border border-slate-200 text-center flex flex-col justify-between h-full">
-                <div>
-                    <span class="text-xs font-bold text-slate-400 block mb-2">روش دوم: ورود با کد یکبار مصرف عددی</span>
-                    <h4 class="text-sm font-black text-slate-800 mb-2">کد تایید زیر را وارد کنید:</h4>
-                    
-                    <div class="my-4 py-3 px-4 bg-white rounded-2xl border-2 border-emerald-500 inline-block shadow-sm">
-                        <span class="font-mono text-3xl font-black text-emerald-700 tracking-widest">{{ session.otp_code }}</span>
-                    </div>
-
-                    <p class="text-xs text-slate-500 leading-relaxed mb-4">
-                        کد فوق را در ربات بله به آدرس <strong class="text-emerald-700 font-mono">@{{ settings.BALE_BOT_USERNAME }}</strong> ارسال فرمایید، یا در کادر زیر وارد کنید:
-                    </p>
+            <!-- بخش ورود حساب‌های آزمایشی (دمو) با استایل بسیار شیک در پایین کارت -->
+            <div class="pt-6 border-t border-slate-100">
+                <div class="flex items-center justify-between mb-3">
+                    <span class="text-xs font-bold text-slate-400">حساب‌های آزمایشی جهت ارزیابی و بررسی پنل‌ها:</span>
+                    <span class="text-[10px] text-slate-400 font-mono">یک کلیک</span>
                 </div>
 
-                <form hx-post="/auth/verify-otp" hx-target="#otp-result" class="space-y-3">
-                    <input type="hidden" name="token" value="{{ session.token }}">
-                    <div class="flex gap-2">
-                        <input type="text" name="otp_code" placeholder="کد ۴ رقمی" maxlength="6" class="w-full px-3 py-2 text-center font-mono font-bold text-slate-800 text-sm rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-emerald-500">
-                        <button type="submit" class="px-5 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold shrink-0">
-                            تایید کد
-                        </button>
-                    </div>
-                    <div id="otp-result"></div>
-                </form>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <!-- ورود دمو داوطلب -->
+                    <a href="/auth/demo-login?role=user" class="p-3.5 rounded-2xl bg-slate-50 hover:bg-brand-50/70 border border-slate-200 hover:border-brand-300 transition-all flex items-center justify-between group">
+                        <div class="flex items-center gap-2.5">
+                            <div class="w-8 h-8 rounded-xl bg-white border border-slate-200 flex items-center justify-center text-sm shadow-sm group-hover:scale-110 transition-transform">
+                                🎓
+                            </div>
+                            <div class="text-right">
+                                <span class="font-bold text-xs text-slate-800 group-hover:text-brand-700 block">دمو داوطلب</span>
+                                <span class="text-[10px] text-slate-400 block">ورود به میز کار آزمون</span>
+                            </div>
+                        </div>
+                        <span class="text-xs text-brand-600 font-bold rtl:rotate-180">←</span>
+                    </a>
+
+                    <!-- ورود دمو ادمین -->
+                    <a href="/auth/demo-login?role=admin" class="p-3.5 rounded-2xl bg-slate-50 hover:bg-indigo-50/70 border border-slate-200 hover:border-indigo-300 transition-all flex items-center justify-between group">
+                        <div class="flex items-center gap-2.5">
+                            <div class="w-8 h-8 rounded-xl bg-white border border-slate-200 flex items-center justify-center text-sm shadow-sm group-hover:scale-110 transition-transform">
+                                👑
+                            </div>
+                            <div class="text-right">
+                                <span class="font-bold text-xs text-slate-800 group-hover:text-indigo-700 block">دمو مدیر (Admin)</span>
+                                <span class="text-[10px] text-slate-400 block">ورود به پنل مدیریت کل</span>
+                            </div>
+                        </div>
+                        <span class="text-xs text-indigo-600 font-bold rtl:rotate-180">←</span>
+                    </a>
+                </div>
             </div>
+        </div>
+
+        <!-- بازگشت به خانه -->
+        <div class="text-center mt-6">
+            <a href="/" class="text-xs font-semibold text-slate-400 hover:text-slate-600 transition-colors">
+                ← بازگشت به صفحه اصلی تست ۹۸
+            </a>
         </div>
     </div>
 </div>
