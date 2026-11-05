@@ -1,79 +1,136 @@
 {% extends "base.html" %}
 
-{% block title %}میز کار داوطلب | تست ۹۸{% endblock %}
+{% block title %}میز کار و داشبورد داوطلب | تست ۹۸{% endblock %}
 
 {% block content %}
 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
-    <!-- هدر داشبورد کاربر -->
-    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between pb-6 mb-8 border-b border-slate-200 gap-4">
-        <div>
-            <div class="flex items-center gap-2 mb-1">
-                <h1 class="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">سلام {{ user.full_name or 'داوطلب عزیز' }}</h1>
-                {% if user.is_vip %}
-                    <span class="px-2.5 py-0.5 rounded-full text-xs font-bold bg-amber-100 text-amber-800 border border-amber-200">اشتراک ویژه VIP</span>
-                {% else %}
-                    <span class="px-2.5 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-600">کاربر عادی</span>
-                {% endif %}
+    <!-- هدر داشبورد داوطلب -->
+    <div class="bg-gradient-to-r from-slate-900 via-slate-800 to-indigo-950 rounded-3xl p-6 sm:p-8 text-white mb-8 shadow-xl relative overflow-hidden">
+        <div class="absolute -left-12 -bottom-12 w-48 h-48 bg-brand-500/10 rounded-full blur-2xl"></div>
+        <div class="relative z-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+            <div>
+                <div class="flex items-center gap-3 mb-2">
+                    <span class="w-10 h-10 rounded-2xl bg-white/10 backdrop-blur-md flex items-center justify-center text-xl font-bold border border-white/10">
+                        🎓
+                    </span>
+                    <div>
+                        <h1 class="text-2xl sm:text-3xl font-black tracking-tight">سلام {{ user.full_name or 'داوطلب عزیز' }}</h1>
+                        <span class="text-xs text-slate-300">شناسه داوطلب: <strong class="font-mono text-brand-300">#{{ user.id }}</strong></span>
+                    </div>
+                    {% if user.is_vip %}
+                        <span class="px-2.5 py-1 rounded-full text-xs font-bold bg-amber-400 text-slate-950 shadow-sm">اشتراک VIP فعال</span>
+                    {% else %}
+                        <span class="px-2.5 py-1 rounded-full text-xs font-medium bg-white/10 text-slate-300 border border-white/10">طرح عمومی داوطلب</span>
+                    {% endif %}
+                </div>
+                <p class="text-xs text-slate-300 max-w-xl leading-relaxed">
+                    میز کار جامع شما در تست ۹۸: رصد مداوم وضعیت آمادگی، تسلط بر دروس استخدامی، آزمون‌های شبیه‌ساز و جعبه مرور هوشمند.
+                </p>
             </div>
-            <p class="text-xs text-slate-500">خلاصه پیشرفت، وضعیت دروس و جعبه مرور هوشمند شما</p>
-        </div>
-        <div class="flex items-center gap-2">
-            <a href="/exam/builder" class="px-4 py-2 rounded-xl bg-brand-600 hover:bg-brand-700 text-white font-bold text-xs shadow-md transition-all">
-                + ساخت آزمون جدید
-            </a>
-            <a href="/user/history" class="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs transition-colors">
-                📜 تاریخچه کامل آزمون‌ها
-            </a>
-            <a href="/user/leitner" class="px-4 py-2 rounded-xl bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold text-xs transition-colors">
-                📦 جعبه لایتنر ({{ leitner.due_today }} در انتظار)
-            </a>
-            <a href="/user/bookmarks" class="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs transition-colors">
-                ★ سوالات نشان‌شده
-            </a>
+
+            <!-- میانبرهای اقدامات سریع -->
+            <div class="flex flex-wrap items-center gap-2">
+                <a href="/exam/builder" class="px-4 py-2.5 rounded-xl bg-brand-600 hover:bg-brand-500 text-white font-black text-xs shadow-lg shadow-brand-600/30 transition-all flex items-center gap-1.5">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+                    <span>+ ساخت آزمون جدید</span>
+                </a>
+                <a href="/user/history" class="px-3.5 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-white font-bold text-xs border border-white/10 transition-colors">
+                    📜 تاریخچه آزمون‌ها
+                </a>
+                <a href="/user/leitner" class="px-3.5 py-2.5 rounded-xl bg-indigo-500/20 hover:bg-indigo-500/30 text-indigo-200 font-bold text-xs border border-indigo-400/30 transition-colors">
+                    📦 جعبه لایتنر ({{ leitner.due_today }})
+                </a>
+                <a href="/user/bookmarks" class="px-3.5 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-white font-bold text-xs border border-white/10 transition-colors">
+                    ★ نشان‌شده‌ها ({{ bookmarks_count }})
+                </a>
+            </div>
         </div>
     </div>
 
-    <!-- ۴ کارت آمار کلی عملکرد -->
-    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm text-center">
-            <span class="text-xs font-semibold text-slate-400 block mb-1">تعداد کل آزمون‌ها</span>
-            <div class="text-3xl font-black font-mono text-slate-800">{{ stats.total_attempts }}</div>
+    <!-- ۶ کارت آمار کلیدی و شاخص‌های آمادگی (KPIs) -->
+    <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 mb-8">
+        <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm text-center">
+            <span class="text-[11px] font-semibold text-slate-400 block mb-1">تعداد آزمون‌ها</span>
+            <div class="text-2xl font-black font-mono text-slate-800">{{ stats.total_attempts }}</div>
         </div>
-        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm text-center">
-            <span class="text-xs font-semibold text-slate-400 block mb-1">میانگین درصد کل</span>
-            <div class="text-3xl font-black font-mono text-brand-600">{{ stats.avg_score }}%</div>
+        <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm text-center">
+            <span class="text-[11px] font-semibold text-slate-400 block mb-1">میانگین درصد کل</span>
+            <div class="text-2xl font-black font-mono text-brand-600">{{ stats.avg_score }}%</div>
         </div>
-        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm text-center">
-            <span class="text-xs font-semibold text-slate-400 block mb-1">بهترین رکورد شما</span>
-            <div class="text-3xl font-black font-mono text-emerald-600">{{ stats.max_score }}%</div>
+        <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm text-center">
+            <span class="text-[11px] font-semibold text-slate-400 block mb-1">بهترین رکورد</span>
+            <div class="text-2xl font-black font-mono text-emerald-600">{{ stats.max_score }}%</div>
         </div>
-        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm text-center">
-            <span class="text-xs font-semibold text-slate-400 block mb-1">تثبیت‌شده در حافظه (لایتنر)</span>
-            <div class="text-3xl font-black font-mono text-indigo-600">{{ leitner.mastered }}</div>
+        <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm text-center">
+            <span class="text-[11px] font-semibold text-slate-400 block mb-1">میانگین تراز کشوری</span>
+            <div class="text-2xl font-black font-mono text-indigo-600">{{ stats.avg_t_score }}</div>
+        </div>
+        <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm text-center">
+            <span class="text-[11px] font-semibold text-slate-400 block mb-1">نسبت درستی پاسخ‌ها</span>
+            <div class="text-2xl font-black font-mono text-teal-600">{{ stats.success_rate }}%</div>
+        </div>
+        <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm text-center">
+            <span class="text-[11px] font-semibold text-slate-400 block mb-1">تثبیت در حافظه</span>
+            <div class="text-2xl font-black font-mono text-amber-600">{{ leitner.mastered }} تست</div>
         </div>
     </div>
 
-    <!-- بخش نقاط قوت و ضعف تفکیکی بر اساس دروس (Color-Coded Mastery) -->
+    <!-- باکس پیشنهاد مطالعه هوشمند (Smart Study Recommendation) -->
+    {% if weakest_subject %}
+    <div class="bg-amber-50 border border-amber-200 rounded-2xl p-4 sm:p-5 mb-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-xl bg-amber-100 text-amber-800 flex items-center justify-center text-xl shrink-0">
+                💡
+            </div>
+            <div>
+                <h4 class="font-extrabold text-xs sm:text-sm text-amber-950">پیشنهاد مطالعه هوشمند بر مبنای کارنامه‌های شما:</h4>
+                <p class="text-xs text-amber-800 mt-0.5">
+                    بیشترین افت درصد شما در مبحث <strong>«{{ weakest_subject.name }}»</strong> با میانگین <strong>{{ weakest_subject.avg_score }}%</strong> بوده است. مرور تست‌های این بخش توصیه می‌شود.
+                </p>
+            </div>
+        </div>
+        <a href="/exam/builder?category={{ weakest_subject.code }}" class="px-4 py-2 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs shrink-0 shadow-sm transition-colors">
+            شروع آزمون تمرینی {{ weakest_subject.name }} ←
+        </a>
+    </div>
+    {% endif %}
+
+    <!-- داشبورد تحلیل تسلط موضوعی دروس با نوارهای پیشرفت مدرن -->
     <div class="mb-10">
         <div class="flex items-center justify-between mb-4">
-            <h2 class="text-lg font-black text-slate-900">تحلیل آمادگی و نقاط قوت و ضعف دروس</h2>
-            <span class="text-xs text-slate-400">بر مبنای میانگین آزمون‌های گذشته</span>
+            <div>
+                <h2 class="text-lg font-black text-slate-900">میزان تسلط و آمادگی در دروس آزمون</h2>
+                <span class="text-xs text-slate-400">محاسبه بر مبنای میانگین نمرات و تعداد تست‌های ثبت‌شده</span>
+            </div>
+            <a href="/exam/builder" class="text-xs font-bold text-brand-600 hover:underline">آزمون جامع تمام دروس ←</a>
         </div>
 
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             {% for sub in subjects %}
-            <div class="rounded-2xl border p-5 flex flex-col justify-between {{ sub.color_class }} shadow-sm">
+            <div class="bg-white rounded-2xl border p-5 flex flex-col justify-between {{ sub.color_class }} shadow-sm">
                 <div>
                     <div class="flex items-center justify-between mb-2">
                         <h3 class="font-bold text-sm text-slate-900">{{ sub.name }}</h3>
                         <span class="text-[11px] font-bold px-2 py-0.5 rounded-full {{ sub.badge_color }}">{{ sub.badge_text }}</span>
                     </div>
-                    <div class="text-2xl font-black font-mono my-2 text-slate-800">{{ sub.avg_score }}%</div>
-                    <span class="text-[11px] opacity-70 block">{{ sub.exam_count }} آزمون ثبت شده</span>
+
+                    <div class="flex items-baseline gap-2 my-2">
+                        <span class="text-2xl font-black font-mono text-slate-900">{{ sub.avg_score }}%</span>
+                        <span class="text-[11px] text-slate-400">میانگین</span>
+                    </div>
+
+                    <!-- نوار پیشرفت مدرن -->
+                    <div class="w-full bg-slate-100 rounded-full h-2 mb-2 overflow-hidden">
+                        <div class="{{ sub.bar_color }} h-2 rounded-full transition-all duration-500" style="width: {{ sub.progress_width }}%"></div>
+                    </div>
+
+                    <span class="text-[11px] text-slate-500 block">{{ sub.exam_count }} آزمون در سوابق</span>
                 </div>
+
                 <div class="mt-4 pt-3 border-t border-slate-200/60">
-                    <a href="/exam/builder?category={{ sub.code }}" class="text-xs font-bold text-brand-700 hover:underline">
-                        شروع تست این درس ←
+                    <a href="/exam/builder?category={{ sub.code }}" class="text-xs font-bold text-brand-700 hover:text-brand-900 flex items-center justify-between">
+                        <span>شرکت در آزمون این درس</span>
+                        <span class="rtl:rotate-180">←</span>
                     </a>
                 </div>
             </div>
@@ -81,39 +138,43 @@
         </div>
     </div>
 
+    <!-- دو ستون: آخرین آزمون‌ها و ویجت لایتنر -->
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <!-- جدول تاریخچه آخرین آزمون‌ها (۲ ستون) -->
+        <!-- ستون سمت راست: آخرین آزمون‌های کاربر (۲ ستون) -->
         <div class="lg:col-span-2 bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
-            <div class="flex items-center justify-between mb-4">
-                <h3 class="font-bold text-slate-900 text-sm">آخرین آزمون‌های شرکت‌کرده</h3>
-                <a href="/user/history" class="text-xs text-brand-600 hover:underline font-bold">مشاهده همه آزمون‌ها ←</a>
+            <div class="flex items-center justify-between mb-4 pb-3 border-b border-slate-100">
+                <div class="flex items-center gap-2">
+                    <span class="w-2.5 h-2.5 rounded-full bg-brand-600"></span>
+                    <h3 class="font-bold text-slate-900 text-sm">آخرین آزمون‌های آزمایشی شما</h3>
+                </div>
+                <a href="/user/history" class="text-xs text-brand-600 hover:underline font-bold">مشاهده تمام کارنامه‌ها (تاریخچه) ←</a>
             </div>
 
             {% if recent_exams %}
             <div class="overflow-x-auto">
                 <table class="w-full text-right text-xs">
                     <thead>
-                        <tr class="border-b border-slate-100 text-slate-400 pb-2">
+                        <tr class="text-slate-400 pb-2 border-b border-slate-100">
                             <th class="py-2.5 font-bold">شناسه</th>
-                            <th class="py-2.5 font-bold">مبحث آزمون</th>
-                            <th class="py-2.5 font-bold">درصد</th>
-                            <th class="py-2.5 font-bold">تراز</th>
-                            <th class="py-2.5 font-bold">تاریخ</th>
+                            <th class="py-2.5 font-bold">درس / عنوان</th>
+                            <th class="py-2.5 font-bold">درصد نهایی</th>
+                            <th class="py-2.5 font-bold">تراز کشوری</th>
+                            <th class="py-2.5 font-bold">تاریخ برگزاری</th>
                             <th class="py-2.5 font-bold text-left">عملیات</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-slate-100">
                         {% for exam in recent_exams %}
-                        <tr class="hover:bg-slate-50 transition-colors">
+                        <tr class="hover:bg-slate-50/80 transition-colors">
                             <td class="py-3 font-mono font-bold text-slate-400">#{{ exam.id }}</td>
-                            <td class="py-3 font-bold text-slate-800">{{ exam.category_name or 'جامع' }}</td>
+                            <td class="py-3 font-bold text-slate-800">{{ exam.category_name or 'آزمون جامع' }}</td>
                             <td class="py-3 font-mono font-bold {% if exam.raw_score >= 50 %}text-emerald-600{% elif exam.raw_score >= 20 %}text-amber-600{% else %}text-rose-600{% endif %}">
                                 {{ exam.raw_score }}%
                             </td>
                             <td class="py-3 font-mono text-indigo-600 font-bold">{{ exam.t_score or 500 }}</td>
                             <td class="py-3 text-slate-400 font-mono">{{ exam.started_at | jalali }}</td>
                             <td class="py-3 text-left">
-                                <a href="/exam/result/{{ exam.id }}" class="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-brand-50 hover:text-brand-700 font-bold text-[11px] transition-colors">
+                                <a href="/exam/result/{{ exam.id }}" class="px-3 py-1.5 rounded-lg bg-brand-50 hover:bg-brand-100 text-brand-700 font-bold text-[11px] transition-colors">
                                     مشاهده کارنامه
                                 </a>
                             </td>
@@ -123,29 +184,43 @@
                 </table>
             </div>
             {% else %}
-            <div class="text-center py-10 text-slate-400 text-xs">
-                هنوز در هیچ آزمونی شرکت نکرده‌اید.
+            <div class="text-center py-12 text-slate-400 text-xs">
+                هنوز در هیچ آزمونی شرکت نکرده‌اید. با کلیک بر روی «ساخت آزمون جدید» اولین تجربه را شروع کنید.
             </div>
             {% endif %}
         </div>
 
-        <!-- ستون جعبه لایتنر هوشمند (۱ ستون) -->
+        <!-- ستون سمت چپ: ویجت جعبه لایتنر هوشمند (۱ ستون) -->
         <div class="lg:col-span-1 bg-white rounded-2xl border border-slate-200 p-6 shadow-sm flex flex-col justify-between">
             <div>
-                <div class="flex items-center justify-between mb-4">
-                    <h3 class="font-bold text-slate-900 text-sm">جعبه مرور لایتنر</h3>
-                    <span class="text-xs font-mono font-bold text-indigo-600">{{ leitner.total_in_leitner }} سوال</span>
+                <div class="flex items-center justify-between mb-3 pb-3 border-b border-slate-100">
+                    <div class="flex items-center gap-2">
+                        <span class="text-base">📦</span>
+                        <h3 class="font-bold text-slate-900 text-sm">جعبه مرور هوشمند لایتنر</h3>
+                    </div>
+                    <span class="text-xs font-mono font-bold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-md">{{ leitner.total_in_leitner }} سوال</span>
                 </div>
-                <p class="text-xs text-slate-500 leading-relaxed mb-6">
-                    سیستم به صورت خودکار سوالاتی که غلط می‌زنید را وارد مرحله ۱ می‌کند و با پاسخ درست تا مرحله ۵ پیش می‌برد.
+                
+                <p class="text-xs text-slate-500 leading-relaxed mb-5">
+                    سوالاتی که در آزمون‌ها اشتباه پاسخ می‌دهید، به صورت خودکار وارد چرخه مرور فاصله‌دار لایتنر می‌شوند تا در حافظه بلندمدت ثبت شوند.
                 </p>
 
                 <!-- پیشرفت ۵ خانه لایتنر -->
-                <div class="space-y-3">
+                <div class="space-y-2.5">
                     {% for box_num in range(1, 6) %}
-                    <div class="flex items-center justify-between p-2.5 rounded-xl bg-slate-50 border border-slate-100 text-xs">
-                        <span class="font-bold text-slate-700">خانه {{ box_num }} {% if box_num == 5 %}(تسلط کامل){% endif %}</span>
-                        <span class="font-mono font-bold text-slate-900 bg-white px-2 py-0.5 rounded-md border border-slate-200">
+                    <div class="p-2.5 rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-between text-xs">
+                        <div class="flex items-center gap-2">
+                            <span class="w-5 h-5 rounded-md bg-white border border-slate-200 font-mono font-bold text-slate-700 flex items-center justify-center text-[10px]">
+                                {{ box_num }}
+                            </span>
+                            <span class="font-bold text-slate-700">
+                                خانه {{ box_num }}
+                                {% if box_num == 1 %} (یادگیری اول)
+                                {% elif box_num == 5 %} (تثبیت دائم)
+                                {% endif %}
+                            </span>
+                        </div>
+                        <span class="font-mono font-bold text-slate-900 bg-white px-2 py-0.5 rounded border border-slate-200 text-xs">
                             {{ leitner.boxes[box_num] }}
                         </span>
                     </div>
@@ -155,7 +230,7 @@
 
             <div class="mt-6 pt-4 border-t border-slate-100">
                 <a href="/user/leitner" class="w-full py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs flex items-center justify-center gap-1.5 transition-colors shadow-sm">
-                    <span>ورود به جعبه لایتنر</span>
+                    <span>ورود به جعبه لایتنر ({{ leitner.due_today }} در انتظار)</span>
                     <svg class="w-4 h-4 rtl:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
                 </a>
             </div>

@@ -47,9 +47,15 @@
 
             <!-- دکمه‌های اقدام -->
             <div class="flex items-center justify-between pt-3 border-t border-slate-100 text-xs">
-                <a href="/admin/moderation" class="font-bold text-brand-600 hover:underline">
-                    اصلاح در صف بازبینی ←
-                </a>
+                <div class="flex items-center gap-3">
+                    <a href="/admin/questions?q={{ rep.question_id }}" class="font-bold text-brand-600 hover:underline flex items-center gap-1">
+                        <span>ویرایش مستقیم سوال #{{ rep.question_id }}</span>
+                        <span class="rtl:rotate-180">←</span>
+                    </a>
+                    <a href="/admin/moderation" class="font-medium text-slate-500 hover:text-slate-800 text-[11px]">
+                        صف بازبینی
+                    </a>
+                </div>
                 <div class="flex items-center gap-2">
                     <form hx-post="/admin/reports/resolve" hx-target="#rep-row-{{ rep.id }}" hx-swap="outerHTML" class="inline">
                         <input type="hidden" name="report_id" value="{{ rep.id }}">

@@ -27,13 +27,13 @@
     <!-- فیلترها و جستجو -->
     <form action="/admin/questions" method="get" class="bg-white rounded-2xl border border-slate-200 p-4 mb-6 shadow-sm flex flex-wrap items-center gap-3">
         <!-- جستجو -->
-        <div class="flex-1 min-w-[200px]">
-            <input type="text" name="q" value="{{ search_query }}" placeholder="جستجو در متن سوال یا پاسخ تشریحی..." class="w-full px-3.5 py-2 text-xs rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-500">
+        <div class="flex-1 min-w-[220px]">
+            <input type="text" name="q" value="{{ search_query }}" placeholder="جستجو در متن سوال، پاسخ، یا شناسه (مثلا #25)..." class="w-full px-3.5 py-2 text-xs rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-500">
         </div>
 
         <!-- فیلتر دسته -->
         <select name="category" class="px-3 py-2 text-xs rounded-xl border border-slate-200 bg-slate-50 text-slate-700 focus:outline-none">
-            <option value="all">همه مباحث</option>
+            <option value="all">همه مباحث آزمون</option>
             {% for cat in categories %}
             <option value="{{ cat.code }}" {% if selected_category == cat.code %}selected{% endif %}>{{ cat.name_fa }}</option>
             {% endfor %}
@@ -42,22 +42,34 @@
         <!-- فیلتر وضعیت -->
         <select name="status" class="px-3 py-2 text-xs rounded-xl border border-slate-200 bg-slate-50 text-slate-700 focus:outline-none">
             <option value="all">همه وضعیت‌ها</option>
-            <option value="published" {% if selected_status == 'published' %}selected{% endif %}>منتشر شده</option>
+            <option value="published" {% if selected_status == 'published' %}selected{% endif %}>منتشر شده (فعال)</option>
             <option value="needs_review" {% if selected_status == 'needs_review' %}selected{% endif %}>نیازمند بررسی</option>
             <option value="rejected" {% if selected_status == 'rejected' %}selected{% endif %}>رد شده</option>
         </select>
 
         <!-- فیلتر کانال مبدا -->
         <select name="channel" class="px-3 py-2 text-xs rounded-xl border border-slate-200 bg-slate-50 text-slate-700 focus:outline-none">
-            <option value="all">همه کانال‌ها</option>
+            <option value="all">همه ۸ کانال مبدا</option>
             {% for ch in channels %}
             <option value="{{ ch }}" {% if selected_channel == ch %}selected{% endif %}>@{{ ch }}</option>
             {% endfor %}
         </select>
 
-        <button type="submit" class="px-5 py-2 rounded-xl bg-slate-900 text-white font-bold text-xs hover:bg-slate-800">
+        <!-- تعداد در هر صفحه -->
+        <select name="per_page" class="px-3 py-2 text-xs rounded-xl border border-slate-200 bg-slate-50 text-slate-700 focus:outline-none">
+            <option value="25" {% if per_page == 25 %}selected{% endif %}>۲۵ سوال در صفحه</option>
+            <option value="50" {% if per_page == 50 %}selected{% endif %}>۵۰ سوال در صفحه</option>
+            <option value="100" {% if per_page == 100 %}selected{% endif %}>۱۰۰ سوال در صفحه</option>
+            <option value="200" {% if per_page == 200 %}selected{% endif %}>۲۰۰ سوال در صفحه</option>
+        </select>
+
+        <button type="submit" class="px-5 py-2 rounded-xl bg-slate-900 text-white font-bold text-xs hover:bg-slate-800 transition-colors">
             اعمال فیلتر
         </button>
+
+        {% if search_query or selected_category != 'all' or selected_status != 'all' or selected_channel != 'all' %}
+        <a href="/admin/questions" class="text-xs text-rose-600 hover:underline font-bold px-2">حذف فیلترها</a>
+        {% endif %}
     </form>
 
     <!-- آمار کل -->
@@ -118,9 +130,11 @@
                         <td class="py-3.5 px-4 text-left">
                             <div class="flex items-center justify-end gap-1.5">
                                 <button type="button" 
-                                        @click="currentQ = {{ q | tojson }}; editModalOpen = true"
-                                        class="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-[11px] transition-colors">
-                                    ویرایش
+                                        hx-get="/admin/questions/{{ q.id }}/edit-modal" 
+                                        hx-target="#edit-modal-slot" 
+                                        hx-swap="innerHTML"
+                                        class="px-2.5 py-1 rounded-lg bg-brand-50 hover:bg-brand-100 text-brand-700 font-bold text-[11px] transition-colors flex items-center gap-1">
+                                    <span>ویرایش کامل</span>
                                 </button>
                                 <button hx-post="/admin/questions/{{ q.id }}/delete" 
                                         hx-target="#q-row-{{ q.id }}" 
@@ -143,13 +157,16 @@
     <div class="flex items-center justify-center gap-1.5 mb-10">
         {% for p in range(1, total_pages + 1) %}
         {% if p <= 15 or p == current_page %}
-        <a href="/admin/questions?q={{ search_query }}&category={{ selected_category }}&status={{ selected_status }}&channel={{ selected_channel }}&page={{ p }}" class="w-8 h-8 rounded-lg font-mono text-xs font-bold flex items-center justify-center transition-colors {% if p == current_page %}bg-brand-600 text-white{% else %}bg-white border border-slate-200 text-slate-700 hover:bg-slate-50{% endif %}">
+        <a href="/admin/questions?q={{ search_query }}&category={{ selected_category }}&status={{ selected_status }}&channel={{ selected_channel }}&per_page={{ per_page }}&page={{ p }}" class="w-8 h-8 rounded-lg font-mono text-xs font-bold flex items-center justify-center transition-colors {% if p == current_page %}bg-brand-600 text-white{% else %}bg-white border border-slate-200 text-slate-700 hover:bg-slate-50{% endif %}">
             {{ p }}
         </a>
         {% endif %}
         {% endfor %}
     </div>
     {% endif %}
+
+    <!-- جایگاه بارگذاری داینامیک مودال ویرایش سوال از طریق HTMX -->
+    <div id="edit-modal-slot"></div>
 
     <!-- مودال ثبت سوال جدید -->
     <div x-show="newModalOpen" x-cloak class="fixed inset-0 z-50 overflow-y-auto">

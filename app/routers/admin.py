@@ -256,10 +256,12 @@ async def admin_questions_page(
     category: Optional[str] = None,
     status: Optional[str] = None,
     channel: Optional[str] = None,
-    page: int = 1
+    page: int = 1,
+    per_page: int = 25
 ):
     user = await require_admin(request, response)
-    page_size = 20
+    page_size = max(10, min(200, per_page))
+    page = max(1, page)
     offset = (page - 1) * page_size
 
     async with get_db() as db:
@@ -267,25 +269,33 @@ async def admin_questions_page(
         params = []
 
         if q:
-            conditions.append("(question_text LIKE ? OR explanation LIKE ?)")
-            params.extend([f"%{q}%", f"%{q}%"])
+            clean_q = q.strip()
+            if clean_q.startswith("#") and clean_q[1:].isdigit():
+                conditions.append("q.id = ?")
+                params.append(int(clean_q[1:]))
+            elif clean_q.isdigit():
+                conditions.append("(q.id = ? OR q.question_text LIKE ? OR q.explanation LIKE ?)")
+                params.extend([int(clean_q), f"%{clean_q}%", f"%{clean_q}%"])
+            else:
+                conditions.append("(q.question_text LIKE ? OR q.explanation LIKE ?)")
+                params.extend([f"%{clean_q}%", f"%{clean_q}%"])
 
         if category and category != "all":
-            conditions.append("category = ?")
+            conditions.append("q.category = ?")
             params.append(category)
 
         if status and status != "all":
-            conditions.append("status = ?")
+            conditions.append("q.status = ?")
             params.append(status)
 
         if channel and channel != "all":
-            conditions.append("source_channel = ?")
+            conditions.append("q.source_channel = ?")
             params.append(channel)
 
         where_sql = " WHERE " + " AND ".join(conditions)
 
         # تعداد کل
-        cursor = await db.execute(f"SELECT COUNT(*) FROM questions {where_sql}", params)
+        cursor = await db.execute(f"SELECT COUNT(*) FROM questions q {where_sql}", params)
         total_count = (await cursor.fetchone())[0]
 
         cursor = await db.execute(f"""
@@ -300,12 +310,18 @@ async def admin_questions_page(
 
         question_items = []
         for r in rows:
+            opts = []
+            try:
+                opts = json.loads(r["options_json"])
+            except Exception:
+                opts = ["گزینه ۱", "گزینه ۲", "گزینه ۳", "گزینه ۴"]
+
             question_items.append({
                 "id": r["id"],
                 "category": r["category"],
                 "category_name": r["category_name"],
                 "question_text": r["question_text"],
-                "options": json.loads(r["options_json"]),
+                "options": opts,
                 "correct_index": r["correct_index"],
                 "explanation": r["explanation"],
                 "difficulty_level": r["difficulty_level"],
@@ -316,7 +332,7 @@ async def admin_questions_page(
             })
 
         # لیست کانال‌ها و دسته‌ها برای فیلتر
-        cursor = await db.execute("SELECT code, name_fa FROM categories WHERE is_exam = 1")
+        cursor = await db.execute("SELECT code, name_fa FROM categories WHERE is_exam = 1 ORDER BY code ASC")
         categories = [dict(r) for r in await cursor.fetchall()]
 
         cursor = await db.execute("SELECT DISTINCT source_channel FROM questions WHERE source_channel IS NOT NULL")
@@ -337,8 +353,60 @@ async def admin_questions_page(
             "selected_status": status or "all",
             "selected_channel": channel or "all",
             "current_page": page,
+            "per_page": page_size,
             "total_pages": total_pages,
             "total_count": total_count,
+            "settings": settings
+        }
+    )
+
+@router.get("/questions/{q_id}/edit-modal", response_class=HTMLResponse)
+async def get_question_edit_modal(request: Request, response: Response, q_id: int):
+    """لود امن فرم ویرایش کامل سوال با داده‌های پر شده از طریق HTMX"""
+    user = await require_admin(request, response)
+    async with get_db() as db:
+        cursor = await db.execute("""
+            SELECT q.*, c.name_fa as category_name
+            FROM questions q
+            LEFT JOIN categories c ON q.category = c.code
+            WHERE q.id = ?
+        """, (q_id,))
+        row = await cursor.fetchone()
+        if not row:
+            raise HTTPException(status_code=404, detail="سوال یافت نشد")
+
+        opts = []
+        try:
+            opts = json.loads(row["options_json"])
+        except Exception:
+            opts = ["", "", "", ""]
+        while len(opts) < 4:
+            opts.append("")
+
+        q_data = {
+            "id": row["id"],
+            "category": row["category"],
+            "category_name": row["category_name"],
+            "question_text": row["question_text"],
+            "options": opts,
+            "correct_index": row["correct_index"],
+            "explanation": row["explanation"] or "",
+            "difficulty_level": row["difficulty_level"],
+            "status": row["status"],
+            "source_channel": row["source_channel"],
+            "report_count": row["report_count"]
+        }
+
+        cursor = await db.execute("SELECT code, name_fa FROM categories WHERE is_exam = 1 ORDER BY code ASC")
+        categories = [dict(r) for r in await cursor.fetchall()]
+
+    return templates.TemplateResponse(
+        request=request,
+        name="admin/question_edit_modal.html",
+        context={
+            "user": user,
+            "q": q_data,
+            "categories": categories,
             "settings": settings
         }
     )
@@ -352,10 +420,11 @@ async def save_question_admin(
     opt1: str = Form(...),
     opt2: str = Form(...),
     opt3: str = Form(...),
-    correct_index: int = Form(...),
+    correct_index: Optional[int] = Form(None),
     explanation: Optional[str] = Form(None),
     difficulty_level: str = Form("medium"),
-    status: str = Form("published")
+    status: str = Form("published"),
+    redirect_url: Optional[str] = Form(None)
 ):
     import hashlib
     options = [opt0.strip(), opt1.strip(), opt2.strip(), opt3.strip()]
@@ -369,17 +438,18 @@ async def save_question_admin(
                 SET category = ?, question_text = ?, options_json = ?,
                     correct_index = ?, explanation = ?, difficulty_level = ?, status = ?
                 WHERE id = ?
-            """, (category, question_text.strip(), options_json, correct_index, explanation, difficulty_level, status, question_id))
+            """, (category, question_text.strip(), options_json, correct_index, explanation.strip() if explanation else None, difficulty_level, status, question_id))
         else:
             await db.execute("""
                 INSERT INTO questions (
                     category, question_text, options_json, correct_index,
                     explanation, difficulty_level, status, text_hash, source_channel
                 ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'manual_admin')
-            """, (category, question_text.strip(), options_json, correct_index, explanation, difficulty_level, status, text_hash))
+            """, (category, question_text.strip(), options_json, correct_index, explanation.strip() if explanation else None, difficulty_level, status, text_hash))
         await db.commit()
 
-    return RedirectResponse(url="/admin/questions", status_code=303)
+    target_redirect = redirect_url or "/admin/questions"
+    return RedirectResponse(url=target_redirect, status_code=303)
 
 @router.post("/questions/{q_id}/delete")
 async def delete_question_admin(q_id: int):

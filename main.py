@@ -2,6 +2,7 @@ import logging
 import asyncio
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
+from fastapi.responses import RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from pathlib import Path
 
@@ -75,6 +76,10 @@ app.include_router(auth.router)
 app.include_router(user_panel.router)
 app.include_router(admin.router)
 app.include_router(seo.router)
+
+@app.get("/login", response_class=RedirectResponse)
+async def login_shortcut():
+    return RedirectResponse(url="/auth/login", status_code=303)
 
 if __name__ == "__main__":
     import uvicorn

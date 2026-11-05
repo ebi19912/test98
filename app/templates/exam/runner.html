@@ -82,6 +82,44 @@
                         <button hx-post="/exam/bookmark/{{ q.question_id }}" hx-swap="outerHTML" class="text-xs text-slate-500 hover:text-amber-600 p-1.5 rounded-lg border border-slate-200 hover:bg-amber-50 transition-colors" title="نشان کردن سوال">
                             ☆ نشان کردن
                         </button>
+
+                        <!-- دکمه گزارش اشکال در سوال -->
+                        <div x-data="{ openReport: false }" class="relative inline-block text-right">
+                            <button type="button" @click="openReport = !openReport" class="text-xs text-slate-400 hover:text-rose-600 p-1.5 rounded-lg border border-slate-200 hover:bg-rose-50 transition-colors flex items-center gap-1" title="گزارش اشکال در سوال">
+                                <span>🚩 گزارش سوال</span>
+                            </button>
+
+                            <!-- دراپ‌داون فرم ارسال گزارش به ادمین -->
+                            <div x-show="openReport" @click.outside="openReport = false" x-cloak class="absolute left-0 mt-2 w-72 bg-white rounded-2xl shadow-xl border border-slate-200 p-4 z-30 text-right">
+                                <div class="flex items-center justify-between pb-2 mb-3 border-b border-slate-100">
+                                    <span class="font-bold text-xs text-slate-800">گزارش اشکال در این سوال</span>
+                                    <button type="button" @click="openReport = false" class="text-slate-400 hover:text-slate-600 text-xs">✕</button>
+                                </div>
+                                
+                                <form hx-post="/exam/report/{{ q.question_id }}" hx-swap="outerHTML" class="space-y-3 text-xs">
+                                    <div>
+                                        <label class="block font-bold text-slate-700 mb-1">نوع اشکال:</label>
+                                        <select name="reason" class="w-full p-2 rounded-xl border border-slate-200 bg-slate-50 text-xs text-slate-700" required>
+                                            <option value="کلید پاسخ اشتباه است">کلید پاسخ اشتباه است</option>
+                                            <option value="صورت سوال دارای غلط املایی یا ناقص است">صورت سوال غلط املایی یا ناقص است</option>
+                                            <option value="گزینه‌ها هم‌پوشانی دارند یا مبهم هستند">گزینه‌ها هم‌پوشانی دارند یا مبهم هستند</option>
+                                            <option value="پاسخ تشریحی نادرست است">پاسخ تشریحی نادرست است</option>
+                                            <option value="سایر موارد">سایر اشکالات</option>
+                                        </select>
+                                    </div>
+
+                                    <div>
+                                        <label class="block font-medium text-slate-600 mb-1">توضیح تکمیلی (اختیاری):</label>
+                                        <textarea name="details" rows="2" placeholder="علت یا گزینه صحیح از نظر شما..." class="w-full p-2 rounded-xl border border-slate-200 text-xs resize-none"></textarea>
+                                    </div>
+
+                                    <div class="flex items-center justify-end gap-1.5 pt-1">
+                                        <button type="button" @click="openReport = false" class="px-3 py-1.5 rounded-lg bg-slate-100 text-slate-600 text-xs font-bold">انصراف</button>
+                                        <button type="submit" class="px-4 py-1.5 rounded-lg bg-rose-600 text-white text-xs font-bold hover:bg-rose-700 shadow-sm">ارسال به ادمین</button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
                     </div>
                 </div>
 

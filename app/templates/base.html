@@ -80,37 +80,39 @@
                 </div>
 
                 <!-- دکمه‌های ورود و حساب کاربری -->
-                <div class="flex items-center gap-3">
+                <div class="flex items-center gap-2">
                     {% if user %}
                         <div class="flex items-center gap-2">
-                            <a href="/user/dashboard" class="flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-medium text-slate-700 hover:bg-slate-100 border border-slate-200">
+                            {% if user.role == 'admin' %}
+                                <a href="/admin" class="px-3 py-1.5 rounded-xl text-xs font-bold bg-indigo-50 text-indigo-700 hover:bg-indigo-100 border border-indigo-200 flex items-center gap-1">
+                                    <span>👑 پنل مدیریت</span>
+                                </a>
+                            {% endif %}
+                            <a href="/user/dashboard" class="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold text-slate-700 hover:bg-slate-100 border border-slate-200">
                                 <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
                                 <span>{{ user.full_name or 'میز کار داوطلب' }}</span>
                             </a>
                             <a href="/user/history" class="p-2 text-slate-500 hover:text-brand-600 rounded-lg hover:bg-slate-100 transition-colors" title="سوابق آزمون‌ها">
-                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                             </a>
                             <a href="/auth/logout" class="p-2 text-slate-400 hover:text-rose-600 rounded-lg hover:bg-rose-50 transition-colors" title="خروج">
-                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
                             </a>
                         </div>
                     {% else %}
-                        <button @click="loginModalOpen = true" hx-get="/auth/modal" hx-target="#modal-body" class="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 transition-colors">
-                            <svg class="w-4 h-4 text-emerald-600" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 14H9v-2h2v2zm0-4H9V7h2v5z"/></svg>
-                            <span>ورود با پیام‌رسان بله</span>
-                        </button>
+                        <a href="/auth/login" class="flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold text-slate-800 bg-slate-100 hover:bg-slate-200 border border-slate-200 transition-colors">
+                            <span>ورود به سامانه</span>
+                        </a>
                     {% endif %}
 
-                    <!-- دکمه ورود سریع دمو برای تست پنل‌ها -->
-                    <div class="hidden lg:flex items-center gap-1 border-r border-slate-200 pr-3">
-                        <form action="/auth/demo-login" method="post" class="inline">
-                            <input type="hidden" name="role" value="user">
-                            <button type="submit" class="text-xs px-2.5 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-600 font-medium">دمو داوطلب</button>
-                        </form>
-                        <form action="/auth/demo-login" method="post" class="inline">
-                            <input type="hidden" name="role" value="admin">
-                            <button type="submit" class="text-xs px-2.5 py-1.5 rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-medium">دمو ادمین</button>
-                        </form>
+                    <!-- دکمه‌های فوری دمو داوطلب و دمو ادمین -->
+                    <div class="flex items-center gap-1 border-r border-slate-200 pr-2 mr-1">
+                        <a href="/auth/demo-login?role=user" class="text-[11px] px-2.5 py-1.5 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-800 font-bold border border-emerald-200/80 transition-colors flex items-center gap-1">
+                            <span>🎓 دمو داوطلب</span>
+                        </a>
+                        <a href="/auth/demo-login?role=admin" class="text-[11px] px-2.5 py-1.5 rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-800 font-bold border border-indigo-200/80 transition-colors flex items-center gap-1">
+                            <span>👑 دمو ادمین</span>
+                        </a>
                     </div>
                 </div>
             </div>

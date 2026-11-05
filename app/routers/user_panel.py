@@ -26,18 +26,32 @@ async def user_dashboard(request: Request, response: Response):
                 AVG(raw_score) as avg_score,
                 MAX(raw_score) as max_score,
                 SUM(correct_count) as total_correct,
-                SUM(wrong_count) as total_wrong
+                SUM(wrong_count) as total_wrong,
+                AVG(t_score) as avg_t_score
             FROM exam_attempts
             WHERE user_id = ? AND is_finished = 1
         """, (user_id,))
         stats_row = await cursor.fetchone()
+        
+        tot_c = stats_row["total_correct"] or 0
+        tot_w = stats_row["total_wrong"] or 0
+        tot_solved = tot_c + tot_w
+        success_rate = round((tot_c / tot_solved * 100), 1) if tot_solved > 0 else 0
+
         stats = {
             "total_attempts": stats_row["total_attempts"] or 0,
             "avg_score": round(stats_row["avg_score"] or 0, 1),
             "max_score": round(stats_row["max_score"] or 0, 1),
-            "total_correct": stats_row["total_correct"] or 0,
-            "total_wrong": stats_row["total_wrong"] or 0
+            "total_correct": tot_c,
+            "total_wrong": tot_w,
+            "total_solved": tot_solved,
+            "success_rate": success_rate,
+            "avg_t_score": int(stats_row["avg_t_score"] or 500)
         }
+
+        # تعداد سوالات نشان‌شده
+        cursor = await db.execute("SELECT COUNT(*) FROM user_bookmarks WHERE user_id = ?", (user_id,))
+        bookmarks_count = (await cursor.fetchone())[0]
 
         # ۲. نقاط قوت و ضعف تفکیکی بر اساس دروس (رنگی: سبز بالای ۶۰٪، زرد ۳۰ تا ۶۰٪، قرمز زیر ۳۰٪)
         cursor = await db.execute("""
@@ -49,8 +63,11 @@ async def user_dashboard(request: Request, response: Response):
             LEFT JOIN exam_attempts ea ON ea.category = c.code AND ea.user_id = ? AND ea.is_finished = 1
             WHERE c.is_exam = 1
             GROUP BY c.code
+            ORDER BY exam_count DESC, avg_score ASC
         """, (user_id,))
         subjects = []
+        weakest_subject = None
+
         for r in await cursor.fetchall():
             avg = round(r["avg_score"] or 0, 1)
             count = r["exam_count"] or 0
@@ -58,20 +75,24 @@ async def user_dashboard(request: Request, response: Response):
                 color_class = "border-slate-200 text-slate-500 bg-slate-50"
                 badge_text = "بدون آزمون"
                 badge_color = "bg-slate-200 text-slate-700"
+                bar_color = "bg-slate-300"
             elif avg >= 60:
                 color_class = "border-emerald-200 text-emerald-800 bg-emerald-50/50"
                 badge_text = "نقطه قوت (عالی)"
                 badge_color = "bg-emerald-100 text-emerald-700"
+                bar_color = "bg-emerald-500"
             elif avg >= 30:
                 color_class = "border-amber-200 text-amber-800 bg-amber-50/50"
                 badge_text = "متوسط (نیازمند تمرین)"
                 badge_color = "bg-amber-100 text-amber-700"
+                bar_color = "bg-amber-500"
             else:
                 color_class = "border-rose-200 text-rose-800 bg-rose-50/50"
                 badge_text = "نقطه ضعف (نیازمند توجه)"
                 badge_color = "bg-rose-100 text-rose-700"
+                bar_color = "bg-rose-500"
 
-            subjects.append({
+            sub_item = {
                 "code": r["code"],
                 "name": r["name_fa"],
                 "icon": r["icon"],
@@ -79,8 +100,14 @@ async def user_dashboard(request: Request, response: Response):
                 "exam_count": count,
                 "color_class": color_class,
                 "badge_text": badge_text,
-                "badge_color": badge_color
-            })
+                "badge_color": badge_color,
+                "bar_color": bar_color,
+                "progress_width": min(100, max(5, int(avg))) if count > 0 else 0
+            }
+            subjects.append(sub_item)
+
+            if count > 0 and (weakest_subject is None or avg < weakest_subject["avg_score"]):
+                weakest_subject = sub_item
 
         # ۳. آخرین آزمون‌های کاربر
         cursor = await db.execute("""
@@ -104,6 +131,8 @@ async def user_dashboard(request: Request, response: Response):
             "user": user,
             "stats": stats,
             "subjects": subjects,
+            "weakest_subject": weakest_subject,
+            "bookmarks_count": bookmarks_count,
             "recent_exams": recent_exams,
             "leitner": leitner_stats,
             "settings": settings

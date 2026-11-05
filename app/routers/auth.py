@@ -1,5 +1,6 @@
+from typing import Optional
 import datetime
-from fastapi import APIRouter, Request, Response, Form
+from fastapi import APIRouter, Request, Response, Form, Query
 from fastapi.responses import HTMLResponse, RedirectResponse, JSONResponse
 
 from app.config import settings
@@ -9,6 +10,28 @@ from app.templates_config import templates
 from app.bale_bot import create_bale_login_session, handle_bale_webhook, check_session_status
 
 router = APIRouter(prefix="/auth", tags=["auth"])
+
+@router.get("/login", response_class=HTMLResponse)
+async def login_page(request: Request, response: Response, redirect: Optional[str] = None):
+    """صفحه اختصاصی ورود به سامانه با گزینه‌های ورود سریع دمو و پیام‌رسان بله"""
+    user, guest_token = await get_current_user_and_guest(request, response)
+    if user:
+        if user.get("role") == "admin":
+            return RedirectResponse(url="/admin", status_code=303)
+        return RedirectResponse(url="/user/dashboard", status_code=303)
+
+    session_data = await create_bale_login_session(guest_token=guest_token)
+
+    return templates.TemplateResponse(
+        request=request,
+        name="auth/login.html",
+        context={
+            "user": user,
+            "session": session_data,
+            "redirect_url": redirect or "/user/dashboard",
+            "settings": settings
+        }
+    )
 
 @router.get("/modal", response_class=HTMLResponse)
 async def get_login_modal(request: Request, response: Response):
@@ -106,29 +129,39 @@ async def verify_otp_endpoint(
         response.headers["HX-Redirect"] = "/user/dashboard"
         return HTMLResponse('<div class="text-xs text-emerald-600 font-bold">ورود موفق! در حال انتقال...</div>')
 
+@router.get("/demo-login")
 @router.post("/demo-login")
-async def demo_login_endpoint(response: Response, role: str = Form("user")):
-    """ورود سریع تستی برای تست پنل ادمین و پنل کاربری"""
+async def demo_login_endpoint(
+    response: Response,
+    role: str = Query("user")
+):
+    """ورود سریع تستی برای تست پنل ادمین و پنل کاربری (پشتیبانی از GET و POST)"""
     async with get_db() as db:
         if role == "admin":
             cursor = await db.execute("SELECT id FROM users WHERE role = 'admin' LIMIT 1")
             row = await cursor.fetchone()
-            user_id = row[0] if row else 1
+            if row:
+                user_id = row[0]
+            else:
+                cursor = await db.execute("INSERT INTO users (full_name, phone, role, is_vip) VALUES ('مدیر ارشد سامانه', '09120000000', 'admin', 1)")
+                await db.commit()
+                user_id = cursor.lastrowid
             redirect_to = "/admin"
         else:
-            # ایجاد یا دریافت یک کاربر نمونه
+            # ایجاد یا دریافت کاربر داوطلب نمونه
             cursor = await db.execute("SELECT id FROM users WHERE role = 'user' LIMIT 1")
             row = await cursor.fetchone()
             if row:
                 user_id = row[0]
             else:
-                cursor = await db.execute("INSERT INTO users (full_name, phone, is_vip) VALUES ('داوطلب نمونه', '09121111111', 1)")
+                cursor = await db.execute("INSERT INTO users (full_name, phone, role, is_vip) VALUES ('داوطلب نمونه', '09121111111', 'user', 1)")
                 await db.commit()
                 user_id = cursor.lastrowid
             redirect_to = "/user/dashboard"
 
-    response.set_cookie(key="user_id", value=str(user_id), max_age=60*24*3600, httponly=True)
-    return RedirectResponse(url=redirect_to, status_code=303)
+    redirect_resp = RedirectResponse(url=redirect_to, status_code=303)
+    redirect_resp.set_cookie(key="user_id", value=str(user_id), max_age=60*24*3600, httponly=True)
+    return redirect_resp
 
 @router.post("/bale-webhook")
 async def bale_webhook_endpoint(request: Request):
@@ -142,5 +175,6 @@ async def bale_webhook_endpoint(request: Request):
 
 @router.get("/logout")
 async def logout_endpoint(response: Response):
-    response.delete_cookie(key="user_id")
-    return RedirectResponse(url="/", status_code=303)
+    resp = RedirectResponse(url="/", status_code=303)
+    resp.delete_cookie(key="user_id")
+    return resp
