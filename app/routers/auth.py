@@ -56,16 +56,23 @@ async def check_auth_endpoint(request: Request, response: Response, token: str):
 
     if res["status"] == "verified":
         user_id = res["user_id"]
+        full_name = "داوطلب عزیز"
+        async with get_db() as db:
+            cursor = await db.execute("SELECT full_name FROM users WHERE id = ?", (user_id,))
+            urow = await cursor.fetchone()
+            if urow and urow[0]:
+                full_name = urow[0]
+
         # تنظیم کوکی نشست امن
         response.set_cookie(key="user_id", value=str(user_id), max_age=60*24*3600, httponly=True)
         response.headers["HX-Redirect"] = "/user/dashboard"
-        return HTMLResponse("""
+        return HTMLResponse(f"""
             <div class="text-center py-4">
                 <div class="inline-flex items-center justify-center w-12 h-12 bg-emerald-100 text-emerald-600 rounded-full mb-3 animate-bounce">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
                 </div>
-                <h4 class="font-bold text-emerald-700 text-lg">ورود موفقیت‌آمیز بود!</h4>
-                <p class="text-sm text-slate-500 mt-1">در حال انتقال به پنل کاربری...</p>
+                <h4 class="font-bold text-emerald-700 text-lg">سلام {full_name}! ورود موفقیت‌آمیز بود.</h4>
+                <p class="text-xs text-slate-500 mt-1">اطلاعات شما با موفقیت از بله همگام شد. در حال انتقال به میز کار...</p>
             </div>
         """)
     elif res["status"] == "expired":
@@ -93,13 +100,13 @@ async def verify_otp_endpoint(
     token: str = Form(""),
     otp_code: str = Form("")
 ):
-    """تایید ورود با وارد کردن کد ۴ رقمی پیامرسان بله به صورت دستی"""
+    """تایید ورود با وارد کردن کد ۴ رقمی پیام‌رسان بله به صورت دستی"""
     token = token.strip()
     otp_code = normalize_digits(otp_code)
 
-    if not token or not otp_code:
+    if not otp_code:
         return HTMLResponse("""
-            <div class="text-xs text-rose-600 bg-rose-50 p-2 rounded-lg mt-2 font-medium">
+            <div class="text-xs text-rose-600 bg-rose-50 p-2.5 rounded-xl mt-2 font-medium">
                 ⚠️ لطفاً کد ۴ رقمی را وارد کنید.
             </div>
         """)
@@ -107,37 +114,60 @@ async def verify_otp_endpoint(
     _, guest_token = await get_current_user_and_guest(request, response)
 
     async with get_db() as db:
-        cursor = await db.execute("""
-            SELECT user_id, guest_token FROM auth_sessions
-            WHERE token = ? AND otp_code = ? AND expires_at > ?
-        """, (token, otp_code, datetime.datetime.utcnow().isoformat()))
+        now_iso = datetime.datetime.utcnow().isoformat()
+        if token:
+            cursor = await db.execute("""
+                SELECT user_id, guest_token, token FROM auth_sessions
+                WHERE ((token = ? AND otp_code = ?) OR otp_code = ?) AND expires_at > ?
+                ORDER BY created_at DESC LIMIT 1
+            """, (token, otp_code, otp_code, now_iso))
+        else:
+            cursor = await db.execute("""
+                SELECT user_id, guest_token, token FROM auth_sessions
+                WHERE otp_code = ? AND expires_at > ?
+                ORDER BY created_at DESC LIMIT 1
+            """, (otp_code, now_iso))
+            
         row = await cursor.fetchone()
 
         if not row:
             return HTMLResponse("""
-                <div class="text-xs text-rose-600 bg-rose-50 p-2 rounded-lg mt-2 font-medium">
+                <div class="text-xs text-rose-600 bg-rose-50 p-2.5 rounded-xl mt-2 font-medium">
                     ⚠️ کد اعتبارسنجی وارد شده صحیح نیست یا منقضی شده است.
                 </div>
             """)
 
-        user_id = row[0]
+        user_id, session_guest_token, session_token = row[0], row[1], row[2]
+
         # در صورتی که کاربر قبلا لاگین نداشته با کد هم ایجاد می‌شود
         if not user_id:
             cursor = await db.execute("INSERT INTO users (full_name) VALUES ('کاربر تست ۹۸')")
             user_id = cursor.lastrowid
 
-        await db.execute("UPDATE auth_sessions SET status = 'verified', user_id = ? WHERE token = ?", (user_id, token))
+        await db.execute("UPDATE auth_sessions SET status = 'verified', user_id = ? WHERE token = ?", (user_id, session_token))
 
         # انتقال آزمون‌های مهمان
-        if guest_token:
-            await db.execute("UPDATE exam_attempts SET user_id = ? WHERE guest_token = ?", (user_id, guest_token))
-            await db.execute("UPDATE user_answers SET user_id = ? WHERE guest_token = ?", (user_id, guest_token))
+        target_guest = guest_token or session_guest_token
+        if target_guest:
+            await db.execute("UPDATE exam_attempts SET user_id = ? WHERE guest_token = ? AND (user_id IS NULL OR user_id = ?)", (user_id, target_guest, user_id))
+            await db.execute("UPDATE user_answers SET user_id = ? WHERE guest_token = ? AND (user_id IS NULL OR user_id = ?)", (user_id, target_guest, user_id))
 
         await db.commit()
 
-        response.set_cookie(key="user_id", value=str(user_id), max_age=60*24*3600, httponly=True)
-        response.headers["HX-Redirect"] = "/user/dashboard"
-        return HTMLResponse('<div class="text-xs text-emerald-600 font-bold">ورود موفق! در حال انتقال...</div>')
+        # دریافت اطلاعات نام کاربر جهت پیام خوش‌آمدگویی
+        cursor = await db.execute("SELECT full_name FROM users WHERE id = ?", (user_id,))
+        u_row = await cursor.fetchone()
+        u_name = u_row[0] if u_row and u_row[0] else 'داوطلب عزیز'
+
+        res = HTMLResponse(f"""
+            <div class="text-xs text-emerald-700 bg-emerald-50 p-3 rounded-xl mt-2 font-bold flex items-center justify-center gap-2 border border-emerald-200">
+                <span class="w-2 h-2 rounded-full bg-emerald-500 animate-ping"></span>
+                <span>خوش آمدید {u_name}! در حال انتقال به میز کار...</span>
+            </div>
+        """)
+        res.set_cookie(key="user_id", value=str(user_id), max_age=60*24*3600, httponly=True)
+        res.headers["HX-Redirect"] = "/user/dashboard"
+        return res
 
 @router.get("/demo-login")
 @router.post("/demo-login")

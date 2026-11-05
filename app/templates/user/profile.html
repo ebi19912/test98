@@ -1,0 +1,122 @@
+{% extends "base.html" %}
+
+{% block title %}مشخصات کاربری داوطلب | تست ۹۸{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <!-- مسیر ناوبری -->
+    <nav class="flex items-center gap-2 text-xs text-slate-400 mb-6">
+        <a href="/" class="hover:text-slate-600">صفحه اصلی</a>
+        <span>/</span>
+        <a href="/user/dashboard" class="hover:text-slate-600">میز کار داوطلب</a>
+        <span>/</span>
+        <span class="text-slate-700 font-bold">مشخصات کاربری و اتصال به بله</span>
+    </nav>
+
+    <!-- کارت وضعیت پیام موفقیت‌آمیز ذخیره -->
+    {% if saved %}
+    <div class="mb-6 p-4 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-bold flex items-center gap-2">
+        <svg class="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+        <span>اطلاعات پروفایل شما با موفقیت ذخیره و به‌روزرسانی شد.</span>
+    </div>
+    {% endif %}
+
+    <div class="bg-white rounded-3xl border border-slate-200 shadow-sm p-6 sm:p-10 mb-8">
+        <!-- هدر پروفایل با آواتار و تگ وضعیت -->
+        <div class="flex flex-col sm:flex-row items-center sm:items-start justify-between gap-6 pb-8 border-b border-slate-100">
+            <div class="flex flex-col sm:flex-row items-center gap-5 text-center sm:text-right">
+                <div class="w-20 h-20 rounded-3xl bg-gradient-to-tr from-brand-600 via-indigo-600 to-violet-600 text-white font-black text-3xl flex items-center justify-center shadow-xl shadow-brand-500/25">
+                    {{ (user.full_name or 'د')[0] }}
+                </div>
+                <div>
+                    <div class="flex items-center justify-center sm:justify-start gap-2.5 mb-1.5">
+                        <h1 class="text-2xl font-black text-slate-900 tracking-tight">{{ user.full_name or 'داوطلب آزمون' }}</h1>
+                        <span class="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                            تایید شده با بله ✅
+                        </span>
+                    </div>
+                    <p class="text-xs text-slate-500">
+                        شناسه داوطلب: <strong class="font-mono text-slate-700">#{{ user.id }}</strong>
+                        <span class="mx-2">•</span>
+                        عضویت: <span class="font-mono text-slate-700">{{ user.created_at | jalali }}</span>
+                    </p>
+                </div>
+            </div>
+
+            <a href="https://ble.ir/{{ settings.BALE_BOT_USERNAME }}" target="_blank" class="px-4 py-2.5 rounded-2xl bg-emerald-50 hover:bg-emerald-100 text-emerald-800 text-xs font-bold border border-emerald-200 flex items-center gap-2 transition-colors">
+                <span>📱 باز کردن ربات در بله</span>
+                <span class="rtl:rotate-180">←</span>
+            </a>
+        </div>
+
+        <!-- کارت اطلاعات همگام‌شده با پیام‌رسان بله -->
+        <div class="my-8 bg-gradient-to-br from-slate-50 to-indigo-50/40 p-5 rounded-2xl border border-slate-200/80">
+            <h2 class="text-xs font-black text-slate-800 mb-3 flex items-center gap-2">
+                <span>🔗 وضعیت اتصال و اطلاعات استخراج‌شده از پیام‌رسان بله</span>
+            </h2>
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs">
+                <div class="bg-white p-3 rounded-xl border border-slate-200">
+                    <span class="text-slate-400 block mb-1">شناسه یکتای بله (Chat ID):</span>
+                    <strong class="font-mono text-slate-800 text-sm font-bold">{{ user.bale_chat_id or 'ورود دستی' }}</strong>
+                </div>
+                <div class="bg-white p-3 rounded-xl border border-slate-200">
+                    <span class="text-slate-400 block mb-1">نام کاربری در بله (Username):</span>
+                    <strong class="font-mono text-brand-600 text-sm font-bold">
+                        {% if user.bale_username %}@{{ user.bale_username }}{% else %}ثبت نشده{% endif %}
+                    </strong>
+                </div>
+                <div class="bg-white p-3 rounded-xl border border-slate-200">
+                    <span class="text-slate-400 block mb-1">شماره تلفن همراه تایید شده:</span>
+                    <strong class="font-mono {% if user.phone %}text-emerald-700{% else %}text-slate-400{% endif %} text-sm font-bold">
+                        {{ user.phone or 'ثبت نشده' }}
+                    </strong>
+                </div>
+            </div>
+            {% if not user.phone %}
+            <p class="text-[11px] text-amber-700 bg-amber-50 border border-amber-200 p-2.5 rounded-xl mt-3 flex items-center gap-1.5">
+                <span>💡 نکته: جهت ثبت خودکار شماره تلفن و دریافت پیامک کارنامه، کافیست در ربات بله دکمه «📱 تایید و اشتراک شماره موبایل» را لمس کنید.</span>
+            </p>
+            {% endif %}
+        </div>
+
+        <!-- فرم ویرایش اطلاعات کاربری -->
+        <form action="/user/profile" method="post" class="space-y-6">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                <!-- فیلد نام و نام خانوادگی -->
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 mb-2">نام و نام خانوادگی داوطلب:</label>
+                    <input type="text" name="full_name" value="{{ user.full_name or '' }}" placeholder="نام کامل خود را وارد کنید..." class="w-full px-4 py-3 rounded-2xl border border-slate-300 text-xs sm:text-sm font-medium focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500" required>
+                </div>
+
+                <!-- فیلد شماره همراه -->
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 mb-2">شماره تلفن همراه (جهت اعلان نتایج):</label>
+                    <input type="text" name="phone" value="{{ user.phone or '' }}" placeholder="0912..." maxlength="14" class="w-full px-4 py-3 rounded-2xl border border-slate-300 text-xs sm:text-sm font-mono font-medium focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500">
+                </div>
+
+                <!-- فیلد آزمون هدف داوطلب -->
+                <div class="sm:col-span-2">
+                    <label class="block text-xs font-bold text-slate-700 mb-2">آزمون هدف استخدامی شما:</label>
+                    <select name="target_exam" class="w-full px-4 py-3 rounded-2xl border border-slate-300 text-xs sm:text-sm font-medium bg-white focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500">
+                        <option value="آزمون استخدامی فراگیر دستگاه‌های اجرایی" {% if user.target_exam == 'آزمون استخدامی فراگیر دستگاه‌های اجرایی' or not user.target_exam %}selected{% endif %}>آزمون استخدامی مشترک فراگیر دستگاه‌های اجرایی کشور</option>
+                        <option value="آزمون استخدامی آموزش و پرورش (آموزگاری و دبیری)" {% if user.target_exam == 'آزمون استخدامی آموزش و پرورش (آموزگاری و دبیری)' %}selected{% endif %}>آزمون استخدامی آموزش و پرورش (مشاغل آموزگاری، دبیری و هنرآموزی)</option>
+                        <option value="آزمون استخدامی وزارت بهداشت و کادر درمان" {% if user.target_exam == 'آزمون استخدامی وزارت بهداشت و کادر درمان' %}selected{% endif %}>آزمون استخدامی وزارت بهداشت، درمان و آموزش پزشکی</option>
+                        <option value="آزمون‌های استخدامی بانک‌های دولتی و خصوصی" {% if user.target_exam == 'آزمون‌های استخدامی بانک‌های دولتی و خصوصی' %}selected{% endif %}>آزمون‌های استخدامی بانک‌ها و موسسات مالی</option>
+                        <option value="آزمون کادر اداری قوه قضائیه" {% if user.target_exam == 'آزمون کادر اداری قوه قضائیه' %}selected{% endif %}>آزمون استخدامی کادر اداری قوه قضائیه و دادگستری</option>
+                    </select>
+                    <p class="text-[11px] text-slate-400 mt-1.5">انتخاب آزمون هدف باعث شخصی‌سازی ضرایب سوالات و تراز شبیه‌ساز شما می‌شود.</p>
+                </div>
+            </div>
+
+            <div class="pt-6 border-t border-slate-100 flex items-center justify-between">
+                <a href="/user/dashboard" class="px-5 py-3 rounded-xl border border-slate-200 text-xs font-bold text-slate-600 hover:bg-slate-50 transition-colors">
+                    انصراف و بازگشت
+                </a>
+                <button type="submit" class="px-7 py-3 rounded-2xl bg-gradient-to-r from-brand-600 to-indigo-600 hover:from-brand-500 hover:to-indigo-500 text-white text-xs sm:text-sm font-bold shadow-lg shadow-brand-500/25 transition-all">
+                    ذخیره تغییرات پروفایل
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

@@ -95,8 +95,10 @@ async def init_db():
             CREATE TABLE IF NOT EXISTS users (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 bale_chat_id INTEGER UNIQUE,
+                bale_username TEXT,
                 phone TEXT UNIQUE,
                 full_name TEXT,
+                target_exam TEXT,
                 is_vip INTEGER DEFAULT 0,
                 role TEXT DEFAULT 'user', -- user, admin
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP

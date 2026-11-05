@@ -12,19 +12,26 @@ logger = logging.getLogger("bale_bot")
 
 def normalize_digits(text: str) -> str:
     """تبدیل ارقام فارسی و عربی به انگلیسی"""
+    if not text:
+        return ""
     persian_digits = "۰۱۲۳۴۵۶۷۸۹"
     arabic_digits = "٠١٢٣٤٥٦٧٨٩"
     for i in range(10):
         text = text.replace(persian_digits[i], str(i)).replace(arabic_digits[i], str(i))
     return text.strip()
 
-def get_bale_main_keyboard() -> Dict[str, Any]:
-    """کیبورد منوی اصلی ربات در بله"""
+def get_bale_main_keyboard(has_phone: bool = True) -> Dict[str, Any]:
+    """کیبورد منوی اصلی ربات در بله با دکمه‌های بزرگ و کاربردی"""
+    buttons = [
+        [{"text": "🔑 دریافت کد ورود به سایت"}, {"text": "🚀 شرکت در آزمون آزمایشی"}]
+    ]
+    if not has_phone:
+        buttons.append([{"text": "📱 تایید و اشتراک شماره موبایل", "request_contact": True}])
+    buttons.append([{"text": "👤 مشخصات حساب من"}, {"text": "📰 اخبار و دفترچه‌ها"}])
+    buttons.append([{"text": "🌐 ورود به سایت test98.ir"}])
+
     return {
-        "keyboard": [
-            [{"text": "🚀 شرکت در آزمون آزمایشی"}, {"text": "📰 اخبار و دفترچه‌ها"}],
-            [{"text": "👤 حساب کاربری من"}, {"text": "🌐 ورود به سایت test98.ir"}]
-        ],
+        "keyboard": buttons,
         "resize_keyboard": True
     }
 
@@ -79,24 +86,31 @@ async def handle_bale_webhook(update: Dict[str, Any]):
 
     chat_id = message["chat"]["id"]
     sender = message.get("from", {})
-    first_name = sender.get("first_name", "کاربر تست ۹۸")
+    first_name = sender.get("first_name", "").strip()
+    last_name = sender.get("last_name", "").strip()
+    full_name = f"{first_name} {last_name}".strip() if (first_name or last_name) else "داوطلب آزمون"
+    bale_username = sender.get("username", "").strip()
     raw_text = message.get("text", "").strip()
     contact = message.get("contact")
     norm_text = normalize_digits(raw_text)
 
     async with get_db() as db:
-        # ۱. ذخیره یا بازیابی هویت کاربر بر اساس شناسه بله
+        # ۱. ذخیره یا به‌روزرسانی هویت کاربر در دیتابیس (نام، آیدی بله، Chat ID)
         await db.execute("""
-            INSERT INTO users (bale_chat_id, full_name)
-            VALUES (?, ?)
-            ON CONFLICT(bale_chat_id) DO UPDATE SET full_name = excluded.full_name
-        """, (chat_id, first_name))
+            INSERT INTO users (bale_chat_id, bale_username, full_name)
+            VALUES (?, ?, ?)
+            ON CONFLICT(bale_chat_id) DO UPDATE SET
+                full_name = CASE WHEN excluded.full_name != '' THEN excluded.full_name ELSE users.full_name END,
+                bale_username = CASE WHEN excluded.bale_username != '' THEN excluded.bale_username ELSE users.bale_username END
+        """, (chat_id, bale_username, full_name))
         await db.commit()
 
-        cursor = await db.execute("SELECT id, phone, role FROM users WHERE bale_chat_id = ?", (chat_id,))
+        cursor = await db.execute("SELECT id, phone, full_name, bale_username FROM users WHERE bale_chat_id = ?", (chat_id,))
         user_row = await cursor.fetchone()
         user_id = user_row[0] if user_row else 1
         phone = user_row[1] if user_row else None
+        user_name = user_row[2] or full_name
+        has_phone = bool(phone)
 
         # حالت ۱: دیپ‌لینک ورود سریع (/start auth_XXXX)
         if raw_text.startswith("/start auth_"):
@@ -122,15 +136,38 @@ async def handle_bale_webhook(update: Dict[str, Any]):
                 await db.commit()
 
                 welcome_msg = (
-                    f"✅ سلام {first_name} عزیز!\n\n"
-                    f"🎉 ورود شما به سامانه **تست ۹۸ (test98.ir)** با موفقیت تایید شد.\n"
-                    f"صفحه مرورگر شما هم‌اکنون به صورت خودکار وارد پنل کاربری می‌شود."
+                    f"✅ **سلام {user_name} عزیز!**\n\n"
+                    f"🎉 ورود شما به پلتفرم **تست ۹۸ (test98.ir)** با موفقیت تایید شد.\n\n"
+                    f"▫️ نام شما: {user_name}\n"
+                    f"▫️ شناسه بله: {chat_id}\n"
+                    f"▫️ آیدی: @{bale_username or '-'}\n\n"
+                    f"صفحه مرورگر شما هم‌اکنون به صورت خودکار باز شده و وارد پنل کاربری می‌شوید."
                 )
-                await send_bale_message(chat_id, welcome_msg, get_bale_main_keyboard())
+                await send_bale_message(chat_id, welcome_msg, get_bale_main_keyboard(has_phone))
             else:
-                await send_bale_message(chat_id, "⚠️ این لینک ورود منقضی شده یا قبلاً استفاده شده است. لطفاً از صفحه لاگین سایت مجدداً اقدام کنید.", get_bale_main_keyboard())
+                await send_bale_message(chat_id, "⚠️ این لینک ورود منقضی شده یا قبلاً استفاده شده است. لطفاً از صفحه لاگین سایت مجدداً اقدام کنید.", get_bale_main_keyboard(has_phone))
 
-        # حالت ۲: کاربر کد عددی ۴ رقمی ورود را تایپ کرده (مانند ۹۷۹۶ یا 9796)
+        # حالت ۲: درخواست کد ورود یک‌بار مصرف از ربات برای وارد کردن در سایت
+        elif "دریافت کد" in raw_text or raw_text == "/code" or "کد ورود" in raw_text:
+            generated_otp = str(secrets.randbelow(9000) + 1000)
+            token = secrets.token_urlsafe(16)
+            expires = (datetime.datetime.utcnow() + datetime.timedelta(minutes=15)).isoformat()
+
+            await db.execute("""
+                INSERT INTO auth_sessions (token, user_id, otp_code, status, expires_at)
+                VALUES (?, ?, ?, 'pending', ?)
+            """, (token, user_id, generated_otp, expires))
+            await db.commit()
+
+            code_msg = (
+                f"🔑 **کد ورود یک‌بار مصرف شما به سایت:**\n\n"
+                f"🔢 **{generated_otp}**\n\n"
+                f"⏱️ این کد تا ۱۵ دقیقه معتبر است.\n"
+                f"وارد صفحه ورود سایت (test98.ir/login) شوید، این کد را در کادر «کد دریافتی از ربات» وارد کرده و دکمه ورود را بزنید."
+            )
+            await send_bale_message(chat_id, code_msg, get_bale_main_keyboard(has_phone))
+
+        # حالت ۳: کاربر کدی که در سایت نمایش داده شده را برای ربات ارسال کرده است
         elif norm_text.isdigit() and len(norm_text) in (4, 5, 6):
             otp_input = norm_text
             cursor = await db.execute("""
@@ -156,90 +193,114 @@ async def handle_bale_webhook(update: Dict[str, Any]):
 
                 confirm_msg = (
                     f"✅ **کد تایید {otp_input} با موفقیت پذیرفته شد!**\n\n"
-                    f"سلام {first_name} گرامی، نشست شما در سایت تست ۹۸ فعال شد. لطفاً به صفحه مرورگر خود نگاه کنید تا ورود خودکار به پنل را مشاهده فرمایید."
+                    f"سلام {user_name} گرامی، مشخصات و نام شما از پیام‌رسان بله استخراج و ثبت شد:\n"
+                    f"▫️ نام در سایت: {user_name}\n"
+                    f"▫️ شناسه بله: {chat_id}\n\n"
+                    f"لطفاً به صفحه مرورگر خود نگاه کنید؛ ورود خودکار به میز کار داوطلب انجام شد."
                 )
-                await send_bale_message(chat_id, confirm_msg, get_bale_main_keyboard())
+                await send_bale_message(chat_id, confirm_msg, get_bale_main_keyboard(has_phone))
             else:
                 err_msg = (
-                    f"❌ کد ارسالی ({otp_input}) یافت نشد یا زمان اعتبار ۱۰ دقیقه‌ای آن پایان یافته است.\n\n"
-                    f"لطفاً صفحه ورود سایت را رفرش کنید و کد جدید را ارسال فرمایید، یا در سایت دکمه «ورود مستقیم با اپلیکیشن بله» را لمس کنید."
+                    f"❌ کد ارسالی ({otp_input}) یافت نشد یا زمان اعتبار آن به پایان رسیده است.\n\n"
+                    f"لطفاً صفحه ورود سایت را بررسی کنید یا دکمه «🔑 دریافت کد ورود به سایت» را در همین منو لمس کنید."
                 )
-                await send_bale_message(chat_id, err_msg, get_bale_main_keyboard())
+                await send_bale_message(chat_id, err_msg, get_bale_main_keyboard(has_phone))
 
-        # حالت ۳: ارسال شماره تماس (Contact)
+        # حالت ۴: ارسال شماره تماس توسط کاربر (Contact Share)
         elif contact:
             phone_number = contact.get("phone_number")
-            if phone_number:
-                await db.execute("UPDATE users SET phone = ? WHERE bale_chat_id = ?", (phone_number, chat_id))
-                await db.commit()
-                confirm_msg = f"🎉 شماره موبایل شما ({phone_number}) با موفقیت تایید و ثبت شد."
-                await send_bale_message(chat_id, confirm_msg, get_bale_main_keyboard())
+            c_first = contact.get("first_name", "").strip()
+            c_last = contact.get("last_name", "").strip()
+            c_name = f"{c_first} {c_last}".strip() if (c_first or c_last) else None
 
-        # حالت ۴: دکمه «🚀 شرکت در آزمون آزمایشی»
+            if phone_number:
+                await db.execute("""
+                    UPDATE users 
+                    SET phone = ?,
+                        full_name = COALESCE(?, full_name)
+                    WHERE bale_chat_id = ?
+                """, (phone_number, c_name, chat_id))
+                await db.commit()
+
+                confirm_msg = (
+                    f"🎉 **شماره همراه شما با موفقیت ثبت شد!**\n\n"
+                    f"📱 شماره تایید شده: `{phone_number}`\n"
+                    f"این شماره در پروفایل کاربری شما در سایت تست ۹۸ قرار گرفت و برای اطلاع‌رسانی نتایج آزمون استفاده می‌شود."
+                )
+                await send_bale_message(chat_id, confirm_msg, get_bale_main_keyboard(has_phone=True))
+
+        # حالت ۵: مشاهده مشخصات و پروفایل کاربر
+        elif "مشخصات" in raw_text or "پروفایل" in raw_text or "حساب" in raw_text:
+            cursor = await db.execute("SELECT COUNT(*) FROM exam_attempts WHERE user_id = ?", (user_id,))
+            exam_count = (await cursor.fetchone())[0]
+
+            profile_text = (
+                f"👤 **مشخصات کاربری شما در تست ۹۸ (استخراج‌شده از بله):**\n\n"
+                f"▫️ **نام داوطلب:** {user_name}\n"
+                f"▫️ **شناسه کاربری بله (Chat ID):** `{chat_id}`\n"
+                f"▫️ **نام کاربری بله:** @{bale_username or 'ثبت نشده'}\n"
+                f"▫️ **شماره همراه:** {phone or 'ثبت نشده (دکمه اشتراک شماره را بزنید)'}\n"
+                f"▫️ **تعداد آزمون‌های انجام‌شده:** {exam_count} آزمون\n"
+                f"▫️ **وضعیت:** داوطلب فعال و تایید هویت شده ✅\n\n"
+                f"🔗 ورود به داشبورد و کارنامه‌ها: {settings.SITE_URL}/user/dashboard"
+            )
+            await send_bale_message(chat_id, profile_text, get_bale_main_keyboard(has_phone))
+
+        # حالت ۶: دکمه «🚀 شرکت در آزمون آزمایشی»
         elif "آزمون" in raw_text:
             exam_text = (
                 f"📝 **شبیه‌ساز هوشمند آزمون‌های استخدامی کشور**\n\n"
-                f"شما می‌توانید با نمونه سوالات ادوار گذشته دروس زیر آزمون دهید:\n"
+                f"بانک سوالات سال‌های گذشته آماده برگزاری آزمون آزمایشی است:\n"
                 f"🔹 مهارت‌های هفتگانه ICDL\n"
-                f"🔹 قوانین و مقررات اداری\n"
+                f"🔹 قوانین و مقررات اداری و استخدامی\n"
                 f"🔹 معارف و اندیشه اسلامی\n"
                 f"🔹 فناوری اطلاعات و کامپیوتر\n\n"
-                f"جهت ساخت آزمون آنلاین با محاسبه نمره منفی و کارنامه روی لینک زیر بزنید:\n"
+                f"همین الان با محاسبه نمره منفی و کارنامه تراز در آزمون شرکت کنید:\n"
                 f"{settings.SITE_URL}/exam/builder"
             )
             markup = {
                 "inline_keyboard": [
                     [{"text": "⚡ شروع آزمون سریع ۱۰ سوالی", "url": f"{settings.SITE_URL}/exam/builder"}],
-                    [{"text": "🌐 ورود به پنل آزمون‌ها", "url": f"{settings.SITE_URL}/user/exams"}]
+                    [{"text": "📊 مشاهده کارنامه‌ها و نتایج", "url": f"{settings.SITE_URL}/user/history"}]
                 ]
             }
             await send_bale_message(chat_id, exam_text, markup)
 
-        # حالت ۵: دکمه «📰 اخبار و دفترچه‌ها»
+        # حالت ۷: دکمه «📰 اخبار و دفترچه‌ها»
         elif "اخبار" in raw_text or "دفترچه" in raw_text:
             cursor = await db.execute("SELECT title, slug FROM news ORDER BY created_at DESC LIMIT 3")
             latest = await cursor.fetchall()
-            news_text = "📢 **جدیدترین اطلاعیه‌ها و دفترچه‌های استخدامی:**\n\n"
+            news_text = "📢 **جدیدترین اطلاعیه‌ها و دفترچه‌های استخدامی کشور:**\n\n"
             for n in latest:
                 news_text += f"▪️ {n[0]}\n🔗 {settings.SITE_URL}/news/{n[1]}\n\n"
-            news_text += f"📂 آرشیو کامل اخبار: {settings.SITE_URL}/news"
-            await send_bale_message(chat_id, news_text, get_bale_main_keyboard())
+            news_text += f"📂 مشاهده تمام اطلاعیه‌ها: {settings.SITE_URL}/news"
+            await send_bale_message(chat_id, news_text, get_bale_main_keyboard(has_phone))
 
-        # حالت ۶: دکمه «👤 حساب کاربری من»
-        elif "حساب" in raw_text or "پروفایل" in raw_text:
-            cursor = await db.execute("SELECT COUNT(*) FROM exam_attempts WHERE user_id = ?", (user_id,))
-            exam_count = (await cursor.fetchone())[0]
-            profile_text = (
-                f"👤 **مشخصات حساب داوطلب در تست ۹۸**\n\n"
-                f"▫️ نام: {first_name}\n"
-                f"▫️ شماره تماس: {phone or 'ثبت نشده'}\n"
-                f"▫️ تعداد آزمون‌های شرکت کرده: {exam_count}\n"
-                f"▫️ وضعیت دسترسی: داوطلب فعال\n\n"
-                f"🔗 ورود به داشبورد داوطلب: {settings.SITE_URL}/user/dashboard"
-            )
-            await send_bale_message(chat_id, profile_text, get_bale_main_keyboard())
-
-        # حالت ۷: دکمه «🌐 ورود به سایت» یا منوی /start
+        # حالت ۸: منوی /start یا «ورود به سایت»
         elif raw_text == "/start" or "سایت" in raw_text:
             welcome = (
-                f"سلام {first_name} عزیز! 🎓\n"
-                f"به ربات هوشمند **تست ۹۸ (test98.ir)** خوش آمدید.\n\n"
-                f"این بازو متصل به بانک نمونه سوالات ادوار گذشته و سیستم ورود بدون رمز سایت است.\n\n"
-                f"💡 **راهنمای ورود به سایت:**\n"
-                f"۱. وارد صفحه ورود سایت شوید.\n"
-                f"۲. کد ۴ رقمی که روی صفحه نمایش داده شده را همینجا ارسال کنید!\n\n"
-                f"همچنین از دکمه‌های زیر می‌توانید برای دسترسی سریع استفاده کنید:"
+                f"سلام {user_name} گرامی! 🎓\n"
+                f"به بازوی هوشمند **تست ۹۸ (test98.ir)** خوش آمدید.\n\n"
+                f"اطلاعات شما از پیام‌رسان بله استخراج و آماده همگام‌سازی با سایت است:\n"
+                f"▫️ نام: **{user_name}**\n"
+                f"▫️ آیدی بله: **@{bale_username or '-'}**\n\n"
+                f"💡 **برای ورود به سایت یکی از راه‌های زیر را انتخاب کنید:**\n"
+                f"۱️⃣ دکمه **«🔑 دریافت کد ورود به سایت»** را بزنید و کد داده‌شده را در سایت تایپ کنید.\n"
+                f"۲️⃣ یا در صفحه لاگین سایت روی **«ورود با اپلیکیشن بله»** بزنید تا بدون تایپ وارد شوید!\n"
+                f"۳️⃣ برای ثبت شماره همراه در سایت، دکمه **«📱 تایید و اشتراک شماره موبایل»** را لمس نمایید."
             )
-            await send_bale_message(chat_id, welcome, get_bale_main_keyboard())
+            await send_bale_message(chat_id, welcome, get_bale_main_keyboard(has_phone))
 
         # حالت پیش‌فرض: سایر پیام‌ها
         else:
             help_text = (
-                f"سلام {first_name} عزیز! ✋\n\n"
-                f"اگر قصد **ورود به سایت تست ۹۸** را دارید، کافیست کد ۴ رقمی نمایش‌داده‌شده روی صفحه کامپیوتر یا مرورگر را همینجا تایپ و ارسال کنید.\n\n"
-                f"همچنین می‌توانید از منوی زیر برای آزمون‌ها و اخبار استفاده نمایید:"
+                f"سلام {user_name} عزیز! ✋\n\n"
+                f"برای ورود به سایت تست ۹۸ می‌توانید:\n"
+                f"▫️ دکمه **«🔑 دریافت کد ورود به سایت»** را لمس کنید تا کد اختصاصی برایتان صادر شود.\n"
+                f"▫️ یا اگر در صفحه سایت کدی می‌بینید، آن را همینجا بفرستید تا ورود شما تایید شود.\n\n"
+                f"همچنین از منوی زیر می‌توانید به آزمون‌ها و اخبار دسترسی داشته باشید:"
             )
-            await send_bale_message(chat_id, help_text, get_bale_main_keyboard())
+            await send_bale_message(chat_id, help_text, get_bale_main_keyboard(has_phone))
 
 async def check_session_status(token: str) -> Dict[str, Any]:
     """بررسی وضعیت تایید نشست احراز هویت توسط مرورگر (HTMX Polling)"""

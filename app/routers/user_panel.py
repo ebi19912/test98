@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Request, Response, HTTPException
+from fastapi import APIRouter, Request, Response, HTTPException, Form, Query
 from fastapi.responses import HTMLResponse, RedirectResponse
 import json
 
@@ -318,4 +318,50 @@ async def user_history_page(
             "settings": settings
         }
     )
+
+@router.get("/profile", response_class=HTMLResponse)
+async def user_profile_get(request: Request, response: Response, saved: bool = Query(False)):
+    """مشاهده مشخصات کاربری و اتصال به بله"""
+    user, _ = await get_current_user_and_guest(request, response)
+    if not user:
+        return RedirectResponse(url="/login", status_code=303)
+
+    return templates.TemplateResponse(
+        request=request,
+        name="user/profile.html",
+        context={
+            "user": user,
+            "saved": saved,
+            "settings": settings
+        }
+    )
+
+@router.post("/profile", response_class=HTMLResponse)
+async def user_profile_post(
+    request: Request,
+    response: Response,
+    full_name: str = Form(""),
+    phone: str = Form(""),
+    target_exam: str = Form("")
+):
+    """به‌روزرسانی اطلاعات پروفایل و آزمون هدف"""
+    user, _ = await get_current_user_and_guest(request, response)
+    if not user:
+        return RedirectResponse(url="/login", status_code=303)
+
+    user_id = user["id"]
+    new_name = full_name.strip() or user["full_name"]
+    new_phone = phone.strip() or user["phone"]
+    new_exam = target_exam.strip() or user.get("target_exam")
+
+    async with get_db() as db:
+        await db.execute("""
+            UPDATE users 
+            SET full_name = ?, phone = ?, target_exam = ?
+            WHERE id = ?
+        """, (new_name, new_phone, new_exam, user_id))
+        await db.commit()
+
+    return RedirectResponse(url="/user/profile?saved=true", status_code=303)
+
 
