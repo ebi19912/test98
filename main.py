@@ -11,6 +11,7 @@ from app.database import init_db
 from app.seed_data import seed_initial_data
 from app.crawler.telegram_crawler import telegram_client
 from app.crawler.crawler_manager import periodic_crawler_worker
+from app.bale_bot import bale_polling_worker
 
 # وارد کردن روت‌های برنامه
 from app.routers import home, exam, news, auth, user_panel, admin, seo
@@ -46,10 +47,14 @@ async def lifespan(app: FastAPI):
     # راه‌اندازی ورکر پس‌زمینه استخراج دوره‌ای از کانال‌ها
     crawler_task = asyncio.create_task(periodic_crawler_worker(interval_seconds=1800))
 
+    # راه‌اندازی ورکر دریافت زنده پیام‌های ربات بله (Long Polling)
+    bale_task = asyncio.create_task(bale_polling_worker())
+
     yield
 
-    # لغو ورکر پس‌زمینه هنگام خاموش شدن
+    # لغو ورکرهای پس‌زمینه هنگام خاموش شدن
     crawler_task.cancel()
+    bale_task.cancel()
 
     # قطع ارتباط ایمن تلگرام در زمان خاموش شدن سرور
     if telegram_client and telegram_client.is_connected():
