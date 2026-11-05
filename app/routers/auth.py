@@ -7,7 +7,7 @@ from app.config import settings
 from app.database import get_db
 from app.auth_helper import get_current_user_and_guest
 from app.templates_config import templates
-from app.bale_bot import create_bale_login_session, handle_bale_webhook, check_session_status
+from app.bale_bot import create_bale_login_session, handle_bale_webhook, check_session_status, normalize_digits
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
@@ -90,17 +90,27 @@ async def check_auth_endpoint(request: Request, response: Response, token: str):
 async def verify_otp_endpoint(
     request: Request,
     response: Response,
-    token: str = Form(...),
-    otp_code: str = Form(...)
+    token: str = Form(""),
+    otp_code: str = Form("")
 ):
     """تایید ورود با وارد کردن کد ۴ رقمی پیامرسان بله به صورت دستی"""
+    token = token.strip()
+    otp_code = normalize_digits(otp_code)
+
+    if not token or not otp_code:
+        return HTMLResponse("""
+            <div class="text-xs text-rose-600 bg-rose-50 p-2 rounded-lg mt-2 font-medium">
+                ⚠️ لطفاً کد ۴ رقمی را وارد کنید.
+            </div>
+        """)
+
     _, guest_token = await get_current_user_and_guest(request, response)
 
     async with get_db() as db:
         cursor = await db.execute("""
             SELECT user_id, guest_token FROM auth_sessions
             WHERE token = ? AND otp_code = ? AND expires_at > ?
-        """, (token, otp_code.strip(), datetime.datetime.utcnow().isoformat()))
+        """, (token, otp_code, datetime.datetime.utcnow().isoformat()))
         row = await cursor.fetchone()
 
         if not row:
