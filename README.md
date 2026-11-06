@@ -138,7 +138,19 @@ d:\test98\
 
 ---
 
-## 📖 مستندات جامع فنی
+## 📖 مستندات جامع مهندسی و راهنمای نصب
 
-برای مطالعه جزئیات کامل معماری، فرمول‌های ریاضی تراز و رتبه، الگوریتم ۵ مرحله‌ای لایتنر، نگاشت کانال‌ها و راهنمای استقرار سرور، فایل [DOCUMENTATION.md](file:///d:/test98/DOCUMENTATION.md) را مطالعه فرمایید.
+برای مطالعه مستندات تخصصی و تفکیک‌شده هر بخش، به پوشه **[docs/](file:///d:/test98/docs/README.md)** یا فایل‌های زیر مراجعه فرمایید:
+
+* 🚀 **[راهنمای جامع نصب و استقرار روی سرور (INSTALLATION.md)](file:///d:/test98/INSTALLATION.md)**
+* 🏛️ **[معماری و ساختار مهندسی (docs/02_ARCHITECTURE.md)](file:///d:/test98/docs/02_ARCHITECTURE.md)**
+* 🗄️ **[پایگاه داده و دیاگرام ۱۲ جدول (docs/03_DATABASE.md)](file:///d:/test98/docs/03_DATABASE.md)**
+* 🕷️ **[پایپ‌لاین استخراج و پالایش هوشمند (docs/04_CRAWLER_PIPELINE.md)](file:///d:/test98/docs/04_CRAWLER_PIPELINE.md)**
+* 🎓 **[موتور آزمون‌ساز و فرمول‌های تراز کشوری (docs/05_EXAM_ENGINE.md)](file:///d:/test98/docs/05_EXAM_ENGINE.md)**
+* 📦 **[جعبه لایتنر هوشمند ۵ مرحله‌ای (docs/06_LEITNER_BOX.md)](file:///d:/test98/docs/06_LEITNER_BOX.md)**
+* 📱 **[یکپارچه‌سازی و اتصال به پیام‌رسان بله (docs/07_BALE_MESSENGER.md)](file:///d:/test98/docs/07_BALE_MESSENGER.md)**
+* 📰 **[خبرخوان استخدامی و قیف تبدیل سئو (docs/08_NEWS_AND_SEO.md)](file:///d:/test98/docs/08_NEWS_AND_SEO.md)**
+* 👑 **[پنل مدیریت کل و ویرایش سوالات (docs/09_ADMIN_PANEL.md)](file:///d:/test98/docs/09_ADMIN_PANEL.md)**
+* 👤 **[میز کار داوطلب و پروفایل کاربری (docs/10_USER_PANEL.md)](file:///d:/test98/docs/10_USER_PANEL.md)**
+
 
